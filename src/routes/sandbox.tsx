@@ -534,8 +534,139 @@ function Sandbox() {
               >
                 <Download className="h-4 w-4" /> Download full PDF report
               </button>
+
+              {/* ---------- BOOST RESUME ---------- */}
+              <div className="glass-strong relative overflow-hidden p-5">
+                <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#E000FF]/20 blur-3xl" />
+                <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-[#4D9CFF]/20 blur-3xl" />
+                <div className="relative">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#4D00FF]/50 to-[#E000FF]/50 neon-ring">
+                      <Rocket className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="font-display text-base font-semibold">Boost this resume with AI</div>
+                  </div>
+                  <p className="mb-3 text-xs text-white/60">
+                    We rewrite your resume — stronger verbs, quantified impact, missing keywords woven in truthfully,
+                    ATS-friendly layout — then re-score it so you can see the lift.
+                  </p>
+
+                  {!boostResult && (
+                    <button
+                      onClick={runBoost}
+                      disabled={boosting}
+                      className="pill pill-hover w-full justify-center text-sm disabled:opacity-50"
+                    >
+                      {boosting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+                      {boosting ? "Rewriting your resume…" : "Boost my ATS score"}
+                    </button>
+                  )}
+
+                  {boostError && (
+                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2 text-xs text-red-200">
+                      <CircleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {boostError}
+                    </div>
+                  )}
+
+                  {boostResult && (
+                    <div className="mt-2 space-y-3">
+                      {/* Score delta */}
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="rounded-lg border border-white/10 bg-white/5 p-2">
+                          <div className="text-[10px] uppercase tracking-widest text-white/50">Before</div>
+                          <div className="font-display text-xl font-bold text-white">{result.score}</div>
+                        </div>
+                        <div className="rounded-lg border border-[#7A5CFF]/40 bg-[#7A5CFF]/10 p-2">
+                          <div className="text-[10px] uppercase tracking-widest text-white/70">
+                            {boostedScore ? "New (re-scored)" : "Projected"}
+                          </div>
+                          <div className="font-display text-xl font-bold neon-text">
+                            {boostedScore ? boostedScore.score : boostResult.projected_score}
+                          </div>
+                        </div>
+                        <div className="rounded-lg border border-[#22C55E]/40 bg-[#22C55E]/10 p-2">
+                          <div className="text-[10px] uppercase tracking-widest text-[#22C55E]">Lift</div>
+                          <div className="font-display text-xl font-bold text-[#22C55E] inline-flex items-center gap-1">
+                            <TrendingUp className="h-4 w-4" />
+                            +{(boostedScore ? boostedScore.score : boostResult.projected_score) - result.score}
+                          </div>
+                        </div>
+                      </div>
+
+                      {boostResult.keywords_added.length > 0 && (
+                        <div>
+                          <div className="mb-1 text-[10px] uppercase tracking-widest text-white/55">Keywords woven in</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {boostResult.keywords_added.map((k) => (
+                              <span key={k} className="rounded-full border border-[#22C55E]/40 bg-[#22C55E]/10 px-2 py-0.5 text-[11px] text-[#22C55E]">+ {k}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {boostResult.changes.length > 0 && (
+                        <div>
+                          <div className="mb-1 text-[10px] uppercase tracking-widest text-white/55">What changed</div>
+                          <ul className="space-y-1">
+                            {boostResult.changes.map((c) => (
+                              <li key={c} className="flex items-start gap-2 text-xs text-white/80">
+                                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#7A5CFF]" /> {c}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      <div>
+                        <div className="mb-1 flex items-center justify-between">
+                          <div className="text-[10px] uppercase tracking-widest text-white/55">Rewritten resume</div>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(boostResult.rewritten_resume);
+                              setCopied("boost"); setTimeout(() => setCopied(null), 1400);
+                            }}
+                            className="inline-flex items-center gap-1 text-[11px] text-white/60 hover:text-white"
+                          >
+                            {copied === "boost" ? <Check className="h-3 w-3 text-[#22C55E]" /> : <Copy className="h-3 w-3" />}
+                            {copied === "boost" ? "Copied" : "Copy all"}
+                          </button>
+                        </div>
+                        <pre className="max-h-72 overflow-auto rounded-lg border border-white/10 bg-black/40 p-3 text-[11px] leading-relaxed text-white/85 whitespace-pre-wrap font-mono">
+{boostResult.rewritten_resume}
+                        </pre>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                        {!boostedScore && (
+                          <button
+                            onClick={reanalyzeBoosted}
+                            disabled={reanalyzing}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs text-white/90 transition hover:border-[#7A5CFF]/60 disabled:opacity-50"
+                          >
+                            {reanalyzing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                            {reanalyzing ? "Re-scoring…" : "Verify new score"}
+                          </button>
+                        )}
+                        <button
+                          onClick={downloadBoostedTxt}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs text-white/90 transition hover:border-[#E000FF]/60"
+                        >
+                          <Download className="h-3.5 w-3.5" /> Download .txt
+                        </button>
+                        <button
+                          onClick={useBoostedAsInput}
+                          className="pill pill-hover justify-center py-2 text-xs"
+                        >
+                          <Sparkles className="h-3.5 w-3.5" /> Use as new resume
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </>
           )}
+
         </section>
       </main>
     </div>
