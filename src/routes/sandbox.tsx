@@ -126,6 +126,7 @@ function Sandbox() {
   const [extracting, setExtracting] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastFile, setLastFile] = useState<File | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
   // Booster state
@@ -140,23 +141,42 @@ function Sandbox() {
 
   const onFile = useCallback(async (f: File) => {
     setError(null);
-    if (f.size > 8 * 1024 * 1024) { setError("File too large (max 8MB)."); return; }
+    setLastFile(f);
+    if (f.size > 8 * 1024 * 1024) {
+      setError(`"${f.name}" is ${(f.size / 1024 / 1024).toFixed(1)} MB — max is 8 MB. Try compressing or exporting a text-only PDF.`);
+      return;
+    }
     setFileName(f.name);
-    if (f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")) {
+    const isPdf = f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf");
+    if (isPdf) {
       setExtracting(true);
       try {
         const t = await extractPdfText(f);
-        if (!t || t.length < 50) throw new Error("Couldn't extract text — this PDF may be scanned images.");
+        if (!t || t.length < 50) throw new Error("SCANNED");
         setText(t);
       } catch (e: any) {
-        setError(e?.message || "PDF extraction failed");
+        const msg = String(e?.message || e || "");
+        if (msg === "SCANNED") {
+          setError("This PDF looks like scanned images — no selectable text was found. Try re-exporting from Word / Google Docs as a text-based PDF, or paste your resume text below.");
+        } else if (/password|encrypt/i.test(msg)) {
+          setError("This PDF is password-protected. Remove the password and re-upload, or paste the text directly.");
+        } else if (/worker|module|resolve|import|fetch/i.test(msg)) {
+          setError("Couldn't load the PDF parser. Check your internet connection and hit Retry.");
+        } else if (/invalid|corrupt|badpdf|InvalidPDF/i.test(msg)) {
+          setError("The file isn't a valid PDF or is corrupted. Try re-exporting it.");
+        } else {
+          setError(`PDF extraction failed: ${msg.slice(0, 160) || "unknown error"}. You can retry or paste the text below.`);
+        }
       } finally { setExtracting(false); }
     } else if (f.type.startsWith("text/") || /\.(txt|md)$/i.test(f.name)) {
-      setText(await f.text());
+      try { setText(await f.text()); }
+      catch (e: any) { setError(`Couldn't read "${f.name}": ${e?.message || "unknown error"}`); }
     } else {
-      setError("Unsupported file type. Use PDF or paste text.");
+      setError(`Unsupported file type "${f.type || f.name.split(".").pop()}". Upload a PDF or .txt, or paste your resume text.`);
     }
   }, []);
+
+  const retryUpload = () => { if (lastFile) onFile(lastFile); };
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -320,8 +340,19 @@ function Sandbox() {
           </div>
 
           {error && (
-            <div className="glass flex items-start gap-2 border border-red-500/30 p-3 text-sm text-red-200">
-              <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" /> {error}
+            <div className="glass flex items-start gap-3 border border-red-500/30 p-3 text-sm text-red-200">
+              <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="flex-1">{error}</div>
+              {lastFile && (
+                <button
+                  onClick={retryUpload}
+                  disabled={extracting}
+                  className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-400/40 bg-red-500/10 px-3 py-1 text-xs text-red-100 transition hover:bg-red-500/20 disabled:opacity-50"
+                >
+                  {extracting ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                  Retry
+                </button>
+              )}
             </div>
           )}
 
@@ -573,7 +604,7 @@ function Sandbox() {
 
                   {boostResult && (
                     <div className="mt-2 space-y-3">
-                      {/* Score delta */}
+                      {/* Score delta — only show verified re-analyzed score to avoid inflated "projected" claims */}
                       <div className="grid grid-cols-3 gap-2 text-center">
                         <div className="rounded-lg border border-white/10 bg-white/5 p-2">
                           <div className="text-[10px] uppercase tracking-widest text-white/50">Before</div>
@@ -581,20 +612,29 @@ function Sandbox() {
                         </div>
                         <div className="rounded-lg border border-[#7A5CFF]/40 bg-[#7A5CFF]/10 p-2">
                           <div className="text-[10px] uppercase tracking-widest text-white/70">
-                            {boostedScore ? "New (re-scored)" : "Projected"}
+                            {boostedScore ? "New (verified)" : reanalyzing ? "Verifying…" : "New"}
                           </div>
-                          <div className="font-display text-xl font-bold neon-text">
-                            {boostedScore ? boostedScore.score : boostResult.projected_score}
+                          <div className="font-display text-xl font-bold neon-text inline-flex items-center justify-center gap-1">
+                            {boostedScore ? boostedScore.score : <Loader2 className="h-5 w-5 animate-spin text-white/70" />}
                           </div>
                         </div>
-                        <div className="rounded-lg border border-[#22C55E]/40 bg-[#22C55E]/10 p-2">
-                          <div className="text-[10px] uppercase tracking-widest text-[#22C55E]">Lift</div>
-                          <div className="font-display text-xl font-bold text-[#22C55E] inline-flex items-center gap-1">
-                            <TrendingUp className="h-4 w-4" />
-                            +{(boostedScore ? boostedScore.score : boostResult.projected_score) - result.score}
+                        <div className={`rounded-lg border p-2 ${boostedScore ? (boostedScore.score - result.score >= 0 ? "border-[#22C55E]/40 bg-[#22C55E]/10" : "border-[#F5B942]/40 bg-[#F5B942]/10") : "border-white/10 bg-white/5"}`}>
+                          <div className={`text-[10px] uppercase tracking-widest ${boostedScore ? (boostedScore.score - result.score >= 0 ? "text-[#22C55E]" : "text-[#F5B942]") : "text-white/50"}`}>Lift</div>
+                          <div className={`font-display text-xl font-bold inline-flex items-center justify-center gap-1 ${boostedScore ? (boostedScore.score - result.score >= 0 ? "text-[#22C55E]" : "text-[#F5B942]") : "text-white/50"}`}>
+                            {boostedScore ? (
+                              <>
+                                <TrendingUp className="h-4 w-4" />
+                                {boostedScore.score - result.score >= 0 ? "+" : ""}{boostedScore.score - result.score}
+                              </>
+                            ) : "—"}
                           </div>
                         </div>
                       </div>
+                      {boostedScore && boostedScore.score < result.score && (
+                        <div className="rounded-lg border border-[#F5B942]/30 bg-[#F5B942]/10 p-2 text-[11px] text-[#F5B942]">
+                          The rewrite scored slightly lower on our strict scanner — try adding real project metrics or a more detailed target JD to give it more signal.
+                        </div>
+                      )}
 
                       {boostResult.keywords_added.length > 0 && (
                         <div>
