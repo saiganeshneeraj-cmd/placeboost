@@ -138,6 +138,18 @@ function Sandbox() {
   const [reanalyzing, setReanalyzing] = useState(false);
   const [boostError, setBoostError] = useState<string | null>(null);
 
+  // Cover letter state
+  const coverLetter = useServerFn(generateCoverLetter);
+  const [company, setCompany] = useState("");
+  const [letterLoading, setLetterLoading] = useState(false);
+  const [letterError, setLetterError] = useState<string | null>(null);
+  const [letter, setLetter] = useState<CoverLetterResult | null>(null);
+
+  // Version history (localStorage)
+  const [versions, setVersions] = useState<Version[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  useEffect(() => { setVersions(loadVersions()); }, []);
+
   const canRun = text.trim().length >= 50 && !loading && !extracting;
   const charCount = text.length;
 
