@@ -69,11 +69,11 @@ function Header() {
         </div>
       </div>
       <nav className="hidden items-center gap-1 md:flex">
-        {nav.map(({ icon: Icon, label }) => (
-          <button key={label} className="group flex items-center gap-2 rounded-full px-3 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white">
+        {nav.map(({ icon: Icon, label, to }) => (
+          <Link key={label} to={to} className="group flex items-center gap-2 rounded-full px-3 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white">
             <Icon className="h-4 w-4 text-[#93C5FD] transition group-hover:text-[#38BDF8]" />
             {label}
-          </button>
+          </Link>
         ))}
       </nav>
       <Link to="/sandbox" className="pill pill-hover text-sm">
