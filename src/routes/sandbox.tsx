@@ -20,7 +20,7 @@ export const Route = createFileRoute("/sandbox")({
 /* ----------------------------- PDF extraction ----------------------------- */
 async function extractPdfText(file: File): Promise<string> {
   // Dynamic import so pdfjs only loads when needed
-  const pdfjs: any = await import("pdfjs-dist/build/pdf.mjs");
+  const pdfjs: any = await import(/* @vite-ignore */ "pdfjs-dist/build/pdf.mjs" as string);
   // Use worker from CDN matching version to avoid bundler wiring
   pdfjs.GlobalWorkerOptions.workerSrc =
     `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
