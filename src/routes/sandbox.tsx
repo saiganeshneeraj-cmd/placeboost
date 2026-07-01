@@ -340,8 +340,19 @@ function Sandbox() {
           </div>
 
           {error && (
-            <div className="glass flex items-start gap-2 border border-red-500/30 p-3 text-sm text-red-200">
-              <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" /> {error}
+            <div className="glass flex items-start gap-3 border border-red-500/30 p-3 text-sm text-red-200">
+              <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="flex-1">{error}</div>
+              {lastFile && (
+                <button
+                  onClick={retryUpload}
+                  disabled={extracting}
+                  className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-400/40 bg-red-500/10 px-3 py-1 text-xs text-red-100 transition hover:bg-red-500/20 disabled:opacity-50"
+                >
+                  {extracting ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                  Retry
+                </button>
+              )}
             </div>
           )}
 
