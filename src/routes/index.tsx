@@ -42,7 +42,7 @@ function AuroraBackdrop() {
         className="pointer-events-none fixed inset-0 -z-[1]"
         style={{
           background:
-            "radial-gradient(600px 600px at var(--mx,50%) var(--my,50%), rgba(224,0,255,0.18), transparent 60%)",
+            "radial-gradient(600px 600px at var(--mx,50%) var(--my,50%), rgba(59,130,246,0.20), transparent 60%)",
           transition: "background 200ms ease",
         }}
       />
