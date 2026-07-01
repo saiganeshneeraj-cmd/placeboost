@@ -198,16 +198,6 @@ function Sandbox() {
     if (f) onFile(f);
   };
 
-  const run = async () => {
-    setLoading(true); setError(null); setResult(null);
-    setBoostResult(null); setBoostedScore(null); setBoostError(null);
-    try {
-      const r = await analyze({ data: { text: text.trim(), jobTarget: jobTarget.trim() } });
-      setResult(r);
-    } catch (e: any) {
-      setError(e?.message || "Analysis failed");
-    } finally { setLoading(false); }
-  };
 
   const run = async () => {
     setLoading(true); setError(null); setResult(null);
