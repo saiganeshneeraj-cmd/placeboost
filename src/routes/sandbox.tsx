@@ -95,6 +95,23 @@ function Bar({ label, value }: { label: string; value: number }) {
   );
 }
 
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+      <div className="text-[10px] uppercase tracking-widest text-white/50">{label}</div>
+      <div className="font-display text-sm font-semibold text-white">{value}</div>
+    </div>
+  );
+}
+
+function ContactChip({ ok, icon, label }: { ok: boolean; icon: React.ReactNode; label: string }) {
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 ${ok ? "border-[#22C55E]/40 bg-[#22C55E]/10 text-[#22C55E]" : "border-white/10 bg-white/5 text-white/40"}`}>
+      {icon} {label} {ok ? "✓" : "✗"}
+    </span>
+  );
+}
+
 /* --------------------------------- Page ---------------------------------- */
 function Sandbox() {
   const analyze = useServerFn(analyzeResume);
