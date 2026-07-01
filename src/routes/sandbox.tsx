@@ -316,7 +316,22 @@ function Sandbox() {
         <div className="font-display text-sm font-semibold">
           Resume <span className="neon-text">Sandbox</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="relative flex items-center gap-2">
+          <Link to="/interview" className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/85 transition hover:border-[#38BDF8]/50" title="AI Interview Prep">
+            <Brain className="h-3.5 w-3.5" /> Interview
+          </Link>
+          <Link to="/predict" className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/85 transition hover:border-[#38BDF8]/50" title="Placement Predictor">
+            <Trophy className="h-3.5 w-3.5" /> Predict
+          </Link>
+          {versions.length > 0 && (
+            <button
+              onClick={() => setHistoryOpen((o) => !o)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/90 transition hover:border-[#38BDF8]/60"
+              title="Version history"
+            >
+              <History className="h-3.5 w-3.5" /> History <span className="rounded-full bg-white/10 px-1.5 text-[10px]">{versions.length}</span>
+            </button>
+          )}
           {result && (
             <button
               onClick={() => downloadAnalysisPdf(result, { fileName, jobTarget })}
@@ -325,6 +340,44 @@ function Sandbox() {
             >
               <Download className="h-3.5 w-3.5" /> Report
             </button>
+          )}
+
+          {historyOpen && (
+            <div className="absolute right-0 top-full z-40 mt-2 w-[min(420px,90vw)] rounded-2xl border border-white/10 bg-[#040814]/95 p-3 shadow-2xl backdrop-blur-xl">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="text-xs uppercase tracking-widest text-white/60">Version history</div>
+                <button onClick={() => setHistoryOpen(false)} className="text-white/50 hover:text-white"><X className="h-4 w-4" /></button>
+              </div>
+              <div className="max-h-[60vh] space-y-1.5 overflow-auto">
+                {versions.map((v) => {
+                  const prev = versions.find((x) => x.createdAt < v.createdAt);
+                  const delta = prev ? v.score - prev.score : null;
+                  return (
+                    <div key={v.id} className="group flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-2 hover:border-white/20">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#1E3A8A]/50 to-[#38BDF8]/40 font-display text-sm font-bold text-white">
+                        {v.score}
+                      </div>
+                      <button onClick={() => loadVersion(v)} className="min-w-0 flex-1 text-left">
+                        <div className="truncate text-sm text-white/90">{v.label}</div>
+                        <div className="flex items-center gap-2 text-[11px] text-white/50">
+                          <span>{formatTimeAgo(v.createdAt)}</span>
+                          {delta !== null && (
+                            <span className={delta >= 0 ? "text-[#22C55E]" : "text-[#F5B942]"}>
+                              {delta >= 0 ? "+" : ""}{delta} vs prev
+                            </span>
+                          )}
+                          {v.jobTarget && <span className="truncate">· {v.jobTarget.slice(0, 30)}</span>}
+                        </div>
+                      </button>
+                      <button onClick={() => removeVersion(v.id)} className="rounded-md p-1.5 text-white/40 opacity-0 transition hover:bg-white/5 hover:text-red-300 group-hover:opacity-100">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-2 text-[10px] text-white/40">Saved locally in your browser · last 20 analyses</div>
+            </div>
           )}
         </div>
 
