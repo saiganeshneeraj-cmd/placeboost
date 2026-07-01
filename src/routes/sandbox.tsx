@@ -1,11 +1,12 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft, Upload, FileText, Sparkles, CircleAlert, CheckCircle2,
-  Loader2, Wand2, Target, X,
+  Loader2, Wand2, Target, X, Download, Copy, Check, Mail, Phone, Linkedin, Github,
 } from "lucide-react";
 import { analyzeResume, type AnalysisResult } from "@/lib/resume.functions";
+import { downloadAnalysisPdf } from "@/lib/report-pdf";
 
 export const Route = createFileRoute("/sandbox")({
   head: () => ({
