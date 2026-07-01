@@ -675,6 +675,107 @@ function Sandbox() {
                 <Download className="h-4 w-4" /> Download full PDF report
               </button>
 
+              {/* ---------- COVER LETTER ---------- */}
+              <div className="glass-strong relative overflow-hidden p-5">
+                <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#38BDF8]/15 blur-3xl" />
+                <div className="relative">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#1E3A8A]/60 to-[#38BDF8]/50 neon-ring">
+                      <MailIcon className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="font-display text-base font-semibold">AI Cover Letter</div>
+                  </div>
+                  <p className="mb-3 text-xs text-white/60">
+                    Tailored to your resume + target JD. 180-260 words, no fluff, ready to paste.
+                  </p>
+
+                  <input
+                    value={company} onChange={(e) => setCompany(e.target.value)}
+                    placeholder="Company name (optional) — e.g. Razorpay"
+                    className="mb-2 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white/90 outline-none placeholder:text-white/35 focus:border-[#38BDF8]/60"
+                  />
+
+                  {!letter && (
+                    <button
+                      onClick={runCoverLetter}
+                      disabled={letterLoading || !jobTarget.trim()}
+                      className="pill pill-hover w-full justify-center text-sm disabled:opacity-50"
+                      title={!jobTarget.trim() ? "Add a target role/JD above first" : ""}
+                    >
+                      {letterLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MailIcon className="h-4 w-4" />}
+                      {letterLoading ? "Drafting letter…" : jobTarget.trim() ? "Generate cover letter" : "Add a target JD above first"}
+                    </button>
+                  )}
+
+                  {letterError && (
+                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2 text-xs text-red-200">
+                      <CircleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {letterError}
+                    </div>
+                  )}
+
+                  {letter && (
+                    <div className="mt-2 space-y-3">
+                      <div className="rounded-lg border border-[#38BDF8]/30 bg-[#38BDF8]/5 p-3">
+                        <div className="text-[10px] uppercase tracking-widest text-white/55">Subject</div>
+                        <div className="text-sm text-white font-medium">{letter.subject}</div>
+                      </div>
+                      <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+                        <div className="text-[10px] uppercase tracking-widest text-white/55">Hook</div>
+                        <div className="text-sm italic text-white/85">"{letter.hook}"</div>
+                      </div>
+                      {letter.key_matches.length > 0 && (
+                        <div>
+                          <div className="mb-1 text-[10px] uppercase tracking-widest text-white/55">Resume ↔ JD alignment</div>
+                          <ul className="space-y-1">
+                            {letter.key_matches.map((k) => (
+                              <li key={k} className="flex items-start gap-2 text-xs text-white/80">
+                                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#22C55E]" /> {k}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      <div>
+                        <div className="mb-1 flex items-center justify-between">
+                          <div className="text-[10px] uppercase tracking-widest text-white/55">Letter</div>
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(letter.letter); setCopied("cl"); setTimeout(() => setCopied(null), 1400); }}
+                            className="inline-flex items-center gap-1 text-[11px] text-white/60 hover:text-white"
+                          >
+                            {copied === "cl" ? <Check className="h-3 w-3 text-[#22C55E]" /> : <Copy className="h-3 w-3" />}
+                            {copied === "cl" ? "Copied" : "Copy"}
+                          </button>
+                        </div>
+                        <pre className="max-h-72 overflow-auto rounded-lg border border-white/10 bg-black/40 p-3 text-[12px] leading-relaxed text-white/90 whitespace-pre-wrap font-sans">
+{letter.letter}
+                        </pre>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={runCoverLetter} disabled={letterLoading}
+                          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs text-white/90 hover:border-[#38BDF8]/60 disabled:opacity-50">
+                          {letterLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                          Regenerate
+                        </button>
+                        <button
+                          onClick={() => {
+                            const blob = new Blob([`Subject: ${letter.subject}\n\n${letter.letter}`], { type: "text/plain;charset=utf-8" });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url; a.download = "cover-letter.txt";
+                            document.body.appendChild(a); a.click(); a.remove();
+                            URL.revokeObjectURL(url);
+                          }}
+                          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs text-white/90 hover:border-[#38BDF8]/60"
+                        >
+                          <Download className="h-3.5 w-3.5" /> Download .txt
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+
               {/* ---------- BOOST RESUME ---------- */}
               <div className="glass-strong relative overflow-hidden p-5">
                 <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#E000FF]/20 blur-3xl" />
