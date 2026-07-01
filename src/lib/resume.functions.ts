@@ -308,3 +308,97 @@ ${SCHEMA_HINT}`;
       heuristic,
     };
   });
+
+/* ---------------- Resume Booster (AI rewrite) ---------------- */
+
+const BOOST_SYSTEM = `You are an elite resume writer & ATS optimizer for Indian tech recruiting (SDE, Data, ML, Product).
+Rewrite the given resume so it scores 85+ on ATS scanners like Jobscan / Resume Worded / Enhancv, WITHOUT fabricating facts.
+Rules:
+- Preserve every real fact: names, companies, dates, degrees, GPAs, projects, tools the person actually used.
+- You MAY infer stronger action verbs, tighten phrasing, add plausible quantifications ONLY when the original hints at scale (e.g. "many users" -> "1,000+ users" is NOT allowed; but converting "improved speed" using an existing metric IS).
+- Weave in missing high-yield keywords from the JD/target role ONLY where they truthfully apply to the candidate's stated experience.
+- Kill buzzwords ("hard-working", "team player", "responsible for"), replace with concrete outcomes.
+- Use a clean ATS-friendly single-column plain-text layout with clear SECTION HEADERS in ALL CAPS on their own line: CONTACT, SUMMARY, SKILLS, EXPERIENCE, PROJECTS, EDUCATION, CERTIFICATIONS, ACHIEVEMENTS. Include only sections that apply.
+- Bullets start with "- " and a strong past-tense verb. Aim for 60–70% quantified bullets.
+- No tables, no columns, no emojis, no markdown bold/italic — plain text ready to paste into Word or a PDF.
+Return STRICT JSON only.`;
+
+const BOOST_SCHEMA = `{
+  "rewritten_resume": string,       // full plain-text resume, section headers in ALL CAPS
+  "projected_score": number,        // realistic ATS score you expect (0-100)
+  "changes": string[],              // 4-8 short bullets describing what you changed & why
+  "keywords_added": string[]        // technical keywords you truthfully wove in
+}`;
+
+export type BoostResult = {
+  rewritten_resume: string;
+  projected_score: number;
+  changes: string[];
+  keywords_added: string[];
+};
+
+export const boostResume = createServerFn({ method: "POST" })
+  .inputValidator((d: { text: string; jobTarget?: string; missingKeywords?: string[] }) => {
+    if (!d || typeof d.text !== "string") throw new Error("text required");
+    const text = d.text.trim();
+    if (text.length < 50) throw new Error("Resume text too short (min 50 chars).");
+    if (text.length > 30000) throw new Error("Resume text too long (max 30k chars).");
+    return {
+      text,
+      jobTarget: (d.jobTarget || "").slice(0, 400),
+      missingKeywords: (d.missingKeywords || []).slice(0, 20).map(String),
+    };
+  })
+  .handler(async ({ data }): Promise<BoostResult> => {
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) throw new Error("AI gateway not configured");
+
+    const userPrompt = `Target role / JD: ${data.jobTarget || "General SDE / Software Engineer roles in India"}
+${data.missingKeywords.length ? `High-yield keywords to weave in truthfully where they apply: ${data.missingKeywords.join(", ")}` : ""}
+
+Original resume:
+"""
+${data.text}
+"""
+
+Return JSON exactly matching:
+${BOOST_SCHEMA}`;
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: BOOST_SYSTEM },
+          { role: "user", content: userPrompt },
+        ],
+        response_format: { type: "json_object" },
+      }),
+    });
+
+    if (res.status === 429) throw new Error("Rate limit hit — try again in a moment.");
+    if (res.status === 402) throw new Error("AI credits exhausted. Add credits in workspace settings.");
+    if (!res.ok) {
+      const t = await res.text().catch(() => "");
+      throw new Error(`AI gateway error ${res.status}: ${t.slice(0, 200)}`);
+    }
+
+    const json = await res.json();
+    const content: string = json?.choices?.[0]?.message?.content ?? "";
+    let parsed: any;
+    try { parsed = JSON.parse(content); }
+    catch {
+      const m = content.match(/\{[\s\S]*\}/);
+      if (!m) throw new Error("Model returned non-JSON output");
+      parsed = JSON.parse(m[0]);
+    }
+
+    const clamp = (n: unknown) => Math.max(0, Math.min(100, Math.round(Number(n) || 0)));
+    return {
+      rewritten_resume: String(parsed.rewritten_resume ?? "").trim(),
+      projected_score: clamp(parsed.projected_score),
+      changes: (parsed.changes || []).slice(0, 10).map(String),
+      keywords_added: (parsed.keywords_added || []).slice(0, 20).map(String),
+    };
+  });

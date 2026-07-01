@@ -4,9 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft, Upload, FileText, Sparkles, CircleAlert, CheckCircle2,
   Loader2, Wand2, Target, X, Download, Copy, Check, Mail, Phone, Linkedin, Github,
+  Rocket, TrendingUp, RefreshCw,
 } from "lucide-react";
-import { analyzeResume, type AnalysisResult } from "@/lib/resume.functions";
+import { analyzeResume, boostResume, type AnalysisResult, type BoostResult } from "@/lib/resume.functions";
 import { downloadAnalysisPdf } from "@/lib/report-pdf";
+
 
 export const Route = createFileRoute("/sandbox")({
   head: () => ({
@@ -115,6 +117,7 @@ function ContactChip({ ok, icon, label }: { ok: boolean; icon: React.ReactNode; 
 /* --------------------------------- Page ---------------------------------- */
 function Sandbox() {
   const analyze = useServerFn(analyzeResume);
+  const boost = useServerFn(boostResume);
   const fileRef = useRef<HTMLInputElement>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
@@ -125,6 +128,13 @@ function Sandbox() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+
+  // Booster state
+  const [boosting, setBoosting] = useState(false);
+  const [boostResult, setBoostResult] = useState<BoostResult | null>(null);
+  const [boostedScore, setBoostedScore] = useState<AnalysisResult | null>(null);
+  const [reanalyzing, setReanalyzing] = useState(false);
+  const [boostError, setBoostError] = useState<string | null>(null);
 
   const canRun = text.trim().length >= 50 && !loading && !extracting;
   const charCount = text.length;
@@ -157,6 +167,7 @@ function Sandbox() {
 
   const run = async () => {
     setLoading(true); setError(null); setResult(null);
+    setBoostResult(null); setBoostedScore(null); setBoostError(null);
     try {
       const r = await analyze({ data: { text: text.trim(), jobTarget: jobTarget.trim() } });
       setResult(r);
@@ -165,7 +176,57 @@ function Sandbox() {
     } finally { setLoading(false); }
   };
 
-  const clear = () => { setText(""); setFileName(null); setResult(null); setError(null); };
+  const runBoost = async () => {
+    if (!result) return;
+    setBoosting(true); setBoostError(null); setBoostResult(null); setBoostedScore(null);
+    try {
+      const r = await boost({ data: {
+        text: text.trim(),
+        jobTarget: jobTarget.trim(),
+        missingKeywords: result.missing_keywords,
+      }});
+      setBoostResult(r);
+    } catch (e: any) {
+      setBoostError(e?.message || "Boost failed");
+    } finally { setBoosting(false); }
+  };
+
+  const reanalyzeBoosted = async () => {
+    if (!boostResult) return;
+    setReanalyzing(true); setBoostError(null);
+    try {
+      const r = await analyze({ data: { text: boostResult.rewritten_resume, jobTarget: jobTarget.trim() } });
+      setBoostedScore(r);
+    } catch (e: any) {
+      setBoostError(e?.message || "Re-analysis failed");
+    } finally { setReanalyzing(false); }
+  };
+
+  const useBoostedAsInput = () => {
+    if (!boostResult) return;
+    setText(boostResult.rewritten_resume);
+    setResult(boostedScore ?? null);
+    setBoostResult(null);
+    setBoostedScore(null);
+    setFileName(fileName ? `${fileName} (boosted)` : "boosted-resume.txt");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const downloadBoostedTxt = () => {
+    if (!boostResult) return;
+    const blob = new Blob([boostResult.rewritten_resume], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "placeboost-resume.txt";
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const clear = () => {
+    setText(""); setFileName(null); setResult(null); setError(null);
+    setBoostResult(null); setBoostedScore(null); setBoostError(null);
+  };
+
 
   return (
     <div className="min-h-screen text-white">
@@ -189,15 +250,8 @@ function Sandbox() {
               <Download className="h-3.5 w-3.5" /> Report
             </button>
           )}
-          <button
-            onClick={run}
-            disabled={!canRun}
-            className="pill pill-hover text-sm disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {loading ? "Analyzing…" : "Analyze"}
-          </button>
         </div>
+
       </header>
 
       <main className="mx-auto grid w-[min(1240px,95%)] grid-cols-1 gap-6 pb-20 pt-8 lg:grid-cols-12">
@@ -267,7 +321,23 @@ function Sandbox() {
               <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" /> {error}
             </div>
           )}
+
+          {/* Prominent primary CTA */}
+          <button
+            onClick={run}
+            disabled={!canRun}
+            className="pill pill-hover w-full justify-center py-3 text-base font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
+            {loading ? "Analyzing resume…" : result ? "Re-analyze resume" : "Analyze my resume"}
+          </button>
+          <div className="text-center text-[11px] text-white/40">
+            {text.trim().length < 50
+              ? `Add at least ${50 - text.trim().length} more characters to enable analysis`
+              : "AI + deterministic ATS scan · results appear on the right"}
+          </div>
         </section>
+
 
         {/* RESULTS */}
         <section className="lg:col-span-5 space-y-4">
@@ -464,8 +534,139 @@ function Sandbox() {
               >
                 <Download className="h-4 w-4" /> Download full PDF report
               </button>
+
+              {/* ---------- BOOST RESUME ---------- */}
+              <div className="glass-strong relative overflow-hidden p-5">
+                <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#E000FF]/20 blur-3xl" />
+                <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-[#4D9CFF]/20 blur-3xl" />
+                <div className="relative">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#4D00FF]/50 to-[#E000FF]/50 neon-ring">
+                      <Rocket className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="font-display text-base font-semibold">Boost this resume with AI</div>
+                  </div>
+                  <p className="mb-3 text-xs text-white/60">
+                    We rewrite your resume — stronger verbs, quantified impact, missing keywords woven in truthfully,
+                    ATS-friendly layout — then re-score it so you can see the lift.
+                  </p>
+
+                  {!boostResult && (
+                    <button
+                      onClick={runBoost}
+                      disabled={boosting}
+                      className="pill pill-hover w-full justify-center text-sm disabled:opacity-50"
+                    >
+                      {boosting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+                      {boosting ? "Rewriting your resume…" : "Boost my ATS score"}
+                    </button>
+                  )}
+
+                  {boostError && (
+                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2 text-xs text-red-200">
+                      <CircleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {boostError}
+                    </div>
+                  )}
+
+                  {boostResult && (
+                    <div className="mt-2 space-y-3">
+                      {/* Score delta */}
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="rounded-lg border border-white/10 bg-white/5 p-2">
+                          <div className="text-[10px] uppercase tracking-widest text-white/50">Before</div>
+                          <div className="font-display text-xl font-bold text-white">{result.score}</div>
+                        </div>
+                        <div className="rounded-lg border border-[#7A5CFF]/40 bg-[#7A5CFF]/10 p-2">
+                          <div className="text-[10px] uppercase tracking-widest text-white/70">
+                            {boostedScore ? "New (re-scored)" : "Projected"}
+                          </div>
+                          <div className="font-display text-xl font-bold neon-text">
+                            {boostedScore ? boostedScore.score : boostResult.projected_score}
+                          </div>
+                        </div>
+                        <div className="rounded-lg border border-[#22C55E]/40 bg-[#22C55E]/10 p-2">
+                          <div className="text-[10px] uppercase tracking-widest text-[#22C55E]">Lift</div>
+                          <div className="font-display text-xl font-bold text-[#22C55E] inline-flex items-center gap-1">
+                            <TrendingUp className="h-4 w-4" />
+                            +{(boostedScore ? boostedScore.score : boostResult.projected_score) - result.score}
+                          </div>
+                        </div>
+                      </div>
+
+                      {boostResult.keywords_added.length > 0 && (
+                        <div>
+                          <div className="mb-1 text-[10px] uppercase tracking-widest text-white/55">Keywords woven in</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {boostResult.keywords_added.map((k) => (
+                              <span key={k} className="rounded-full border border-[#22C55E]/40 bg-[#22C55E]/10 px-2 py-0.5 text-[11px] text-[#22C55E]">+ {k}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {boostResult.changes.length > 0 && (
+                        <div>
+                          <div className="mb-1 text-[10px] uppercase tracking-widest text-white/55">What changed</div>
+                          <ul className="space-y-1">
+                            {boostResult.changes.map((c) => (
+                              <li key={c} className="flex items-start gap-2 text-xs text-white/80">
+                                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#7A5CFF]" /> {c}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      <div>
+                        <div className="mb-1 flex items-center justify-between">
+                          <div className="text-[10px] uppercase tracking-widest text-white/55">Rewritten resume</div>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(boostResult.rewritten_resume);
+                              setCopied("boost"); setTimeout(() => setCopied(null), 1400);
+                            }}
+                            className="inline-flex items-center gap-1 text-[11px] text-white/60 hover:text-white"
+                          >
+                            {copied === "boost" ? <Check className="h-3 w-3 text-[#22C55E]" /> : <Copy className="h-3 w-3" />}
+                            {copied === "boost" ? "Copied" : "Copy all"}
+                          </button>
+                        </div>
+                        <pre className="max-h-72 overflow-auto rounded-lg border border-white/10 bg-black/40 p-3 text-[11px] leading-relaxed text-white/85 whitespace-pre-wrap font-mono">
+{boostResult.rewritten_resume}
+                        </pre>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                        {!boostedScore && (
+                          <button
+                            onClick={reanalyzeBoosted}
+                            disabled={reanalyzing}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs text-white/90 transition hover:border-[#7A5CFF]/60 disabled:opacity-50"
+                          >
+                            {reanalyzing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                            {reanalyzing ? "Re-scoring…" : "Verify new score"}
+                          </button>
+                        )}
+                        <button
+                          onClick={downloadBoostedTxt}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs text-white/90 transition hover:border-[#E000FF]/60"
+                        >
+                          <Download className="h-3.5 w-3.5" /> Download .txt
+                        </button>
+                        <button
+                          onClick={useBoostedAsInput}
+                          className="pill pill-hover justify-center py-2 text-xs"
+                        >
+                          <Sparkles className="h-3.5 w-3.5" /> Use as new resume
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </>
           )}
+
         </section>
       </main>
     </div>
