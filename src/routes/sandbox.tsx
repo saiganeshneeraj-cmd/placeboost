@@ -176,6 +176,18 @@ function Sandbox() {
     } finally { setLoading(false); }
   };
 
+  const reanalyzeBoosted = async (rewritten?: string) => {
+    const source = rewritten ?? boostResult?.rewritten_resume;
+    if (!source) return;
+    setReanalyzing(true); setBoostError(null);
+    try {
+      const r = await analyze({ data: { text: source, jobTarget: jobTarget.trim() } });
+      setBoostedScore(r);
+    } catch (e: any) {
+      setBoostError(e?.message || "Re-analysis failed");
+    } finally { setReanalyzing(false); }
+  };
+
   const runBoost = async () => {
     if (!result) return;
     setBoosting(true); setBoostError(null); setBoostResult(null); setBoostedScore(null);
@@ -186,21 +198,13 @@ function Sandbox() {
         missingKeywords: result.missing_keywords,
       }});
       setBoostResult(r);
+      // Auto re-run ATS analysis so the verified lift shows without extra clicks
+      reanalyzeBoosted(r.rewritten_resume);
     } catch (e: any) {
       setBoostError(e?.message || "Boost failed");
     } finally { setBoosting(false); }
   };
 
-  const reanalyzeBoosted = async () => {
-    if (!boostResult) return;
-    setReanalyzing(true); setBoostError(null);
-    try {
-      const r = await analyze({ data: { text: boostResult.rewritten_resume, jobTarget: jobTarget.trim() } });
-      setBoostedScore(r);
-    } catch (e: any) {
-      setBoostError(e?.message || "Re-analysis failed");
-    } finally { setReanalyzing(false); }
-  };
 
   const useBoostedAsInput = () => {
     if (!boostResult) return;
