@@ -321,7 +321,23 @@ function Sandbox() {
               <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" /> {error}
             </div>
           )}
+
+          {/* Prominent primary CTA */}
+          <button
+            onClick={run}
+            disabled={!canRun}
+            className="pill pill-hover w-full justify-center py-3 text-base font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
+            {loading ? "Analyzing resume…" : result ? "Re-analyze resume" : "Analyze my resume"}
+          </button>
+          <div className="text-center text-[11px] text-white/40">
+            {text.trim().length < 50
+              ? `Add at least ${50 - text.trim().length} more characters to enable analysis`
+              : "AI + deterministic ATS scan · results appear on the right"}
+          </div>
         </section>
+
 
         {/* RESULTS */}
         <section className="lg:col-span-5 space-y-4">
