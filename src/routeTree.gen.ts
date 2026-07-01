@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SandboxRouteImport } from './routes/sandbox'
+import { Route as InterviewRouteImport } from './routes/interview'
 import { Route as IndexRouteImport } from './routes/index'
 
 const SandboxRoute = SandboxRouteImport.update({
   id: '/sandbox',
   path: '/sandbox',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InterviewRoute = InterviewRouteImport.update({
+  id: '/interview',
+  path: '/interview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -25,27 +31,31 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/interview': typeof InterviewRoute
   '/sandbox': typeof SandboxRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/interview': typeof InterviewRoute
   '/sandbox': typeof SandboxRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/interview': typeof InterviewRoute
   '/sandbox': typeof SandboxRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sandbox'
+  fullPaths: '/' | '/interview' | '/sandbox'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sandbox'
-  id: '__root__' | '/' | '/sandbox'
+  to: '/' | '/interview' | '/sandbox'
+  id: '__root__' | '/' | '/interview' | '/sandbox'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  InterviewRoute: typeof InterviewRoute
   SandboxRoute: typeof SandboxRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/sandbox'
       fullPath: '/sandbox'
       preLoaderRoute: typeof SandboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/interview': {
+      id: '/interview'
+      path: '/interview'
+      fullPath: '/interview'
+      preLoaderRoute: typeof InterviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  InterviewRoute: InterviewRoute,
   SandboxRoute: SandboxRoute,
 }
 export const routeTree = rootRouteImport
