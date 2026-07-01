@@ -281,13 +281,24 @@ function Sandbox() {
                 <div className="flex flex-col items-center gap-6 md:flex-row">
                   <ScoreGauge value={result.score} />
                   <div className="flex-1 space-y-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <div className="font-display text-base font-semibold">Metric breakdown</div>
                       {result.role_guess && (
                         <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-widest text-white/70">
                           {result.role_guess}
                         </span>
                       )}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 text-[10px]">
+                      <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-white/70">
+                        Rules <b className="ml-1 text-white">{result.heuristic_score}</b>
+                      </span>
+                      <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-white/70">
+                        AI <b className="ml-1 text-white">{result.ai_score}</b>
+                      </span>
+                      <span className="rounded-full border border-[#7A5CFF]/40 bg-[#7A5CFF]/10 px-2 py-0.5 text-white">
+                        Blended <b className="ml-1">{result.score}</b>
+                      </span>
                     </div>
                     <Bar label="Keywords" value={result.metrics.keywords} />
                     <Bar label="Formatting" value={result.metrics.formatting} />
@@ -296,6 +307,54 @@ function Sandbox() {
                     <Bar label="Skills" value={result.metrics.skills} />
                   </div>
                 </div>
+              </div>
+
+              {/* Deterministic report */}
+              <div className="glass p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="text-xs uppercase tracking-widest text-white/55">Deterministic scan</div>
+                  <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-widest ${
+                    result.heuristic.readability_flag === "clean" ? "border-[#22C55E]/40 bg-[#22C55E]/10 text-[#22C55E]" :
+                    result.heuristic.readability_flag === "dense" ? "border-[#F5B942]/40 bg-[#F5B942]/10 text-[#F5B942]" :
+                    "border-[#EF4444]/40 bg-[#EF4444]/10 text-[#EF4444]"
+                  }`}>{result.heuristic.readability_flag} · {result.heuristic.word_count} words</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <Stat label="Bullets" value={String(result.heuristic.bullet_count)} />
+                  <Stat label="Quantified" value={`${result.heuristic.quantified_pct}%`} />
+                  <Stat label="Action verbs" value={`${result.heuristic.action_verb_pct}%`} />
+                  <Stat label="Hard skills" value={String(result.heuristic.hard_skills_found.length)} />
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {(["contact","summary","education","experience","projects","skills","certifications","achievements"] as const).map((s) => {
+                    const found = result.heuristic.sections_found.includes(s);
+                    return (
+                      <span key={s} className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-widest ${found ? "border-[#22C55E]/40 bg-[#22C55E]/10 text-[#22C55E]" : "border-white/10 bg-white/5 text-white/40 line-through"}`}>
+                        {s}
+                      </span>
+                    );
+                  })}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-white/70">
+                  <ContactChip ok={result.heuristic.contact.email} icon={<Mail className="h-3 w-3" />} label="Email" />
+                  <ContactChip ok={result.heuristic.contact.phone} icon={<Phone className="h-3 w-3" />} label="Phone" />
+                  <ContactChip ok={result.heuristic.contact.linkedin} icon={<Linkedin className="h-3 w-3" />} label="LinkedIn" />
+                  <ContactChip ok={result.heuristic.contact.github} icon={<Github className="h-3 w-3" />} label="GitHub" />
+                </div>
+                {jobTarget.trim().length > 0 && (
+                  <div className="mt-4">
+                    <div className="mb-1 flex items-baseline justify-between text-xs">
+                      <span className="text-white/60">JD keyword match</span>
+                      <span className="font-display font-semibold">{result.heuristic.jd_match_pct}%</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
+                      <div className="h-full" style={{ width: `${result.heuristic.jd_match_pct}%`, background: "linear-gradient(90deg,#4D9CFF,#E000FF)" }} />
+                    </div>
+                    <div className="mt-2 text-[11px] text-white/50">
+                      {result.heuristic.jd_hits.length} hits · {result.heuristic.jd_misses.length} misses
+                    </div>
+                  </div>
+                )}
               </div>
 
               {result.missing_keywords.length > 0 && (
