@@ -35,8 +35,8 @@
   --color-violet-neon: var(--violet-neon);
   --color-magenta: var(--magenta);
   --color-amber-warn: var(--amber-warn);
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
