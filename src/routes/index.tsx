@@ -53,10 +53,9 @@ function AuroraBackdrop() {
 /* --------------------------------- Header --------------------------------- */
 function Header() {
   const nav = [
-    { icon: FileText, label: "Resume" },
-    { icon: MapIcon, label: "Roadmap" },
-    { icon: LineChart, label: "Prediction" },
-    { icon: Wand2, label: "Builder" },
+    { icon: FileText, label: "Resume", to: "/sandbox" as const },
+    { icon: Cpu, label: "Interview", to: "/interview" as const },
+    { icon: LineChart, label: "Predict", to: "/predict" as const },
   ];
   return (
     <header className="sticky top-4 z-30 mx-auto mt-4 flex w-[min(1240px,95%)] items-center justify-between glass px-4 py-3">
@@ -70,11 +69,11 @@ function Header() {
         </div>
       </div>
       <nav className="hidden items-center gap-1 md:flex">
-        {nav.map(({ icon: Icon, label }) => (
-          <button key={label} className="group flex items-center gap-2 rounded-full px-3 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white">
+        {nav.map(({ icon: Icon, label, to }) => (
+          <Link key={label} to={to} className="group flex items-center gap-2 rounded-full px-3 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white">
             <Icon className="h-4 w-4 text-[#93C5FD] transition group-hover:text-[#38BDF8]" />
             {label}
-          </button>
+          </Link>
         ))}
       </nav>
       <Link to="/sandbox" className="pill pill-hover text-sm">
@@ -337,9 +336,9 @@ function Dashboard() {
         {/* FEATURE STRIP — quiet, three cards */}
         <section id="features" className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
           {[
-            { icon: FileText, title: "Resume Sandbox", body: "Drop a PDF or paste text. Instant ATS score with metric breakdown.", to: "/sandbox" },
-            { icon: Wand2, title: "AI Boost", body: "Rewrite with quantified impact, verified score lift, one-click download." },
-            { icon: LineChart, title: "Placement Signal", body: "Predicted probability and expected package range from your profile." },
+            { icon: FileText, title: "Resume Sandbox", body: "Drop a PDF or paste text. Instant ATS score, boost, and cover letter.", to: "/sandbox" },
+            { icon: Cpu, title: "Interview Prep", body: "AI-generated tech + behavioral questions with STAR answers.", to: "/interview" },
+            { icon: LineChart, title: "Placement Predictor", body: "Company-tier odds and expected CTC range for the Indian market.", to: "/predict" },
           ].map(({ icon: Icon, title, body, to }) => {
             const Card = (
               <div className="glass group h-full p-5 transition hover:-translate-y-0.5 hover:border-white/20">

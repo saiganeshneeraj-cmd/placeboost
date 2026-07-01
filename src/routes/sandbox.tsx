@@ -4,10 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft, Upload, FileText, Sparkles, CircleAlert, CheckCircle2,
   Loader2, Wand2, Target, X, Download, Copy, Check, Mail, Phone, Linkedin, Github,
-  Rocket, TrendingUp, RefreshCw,
+  Rocket, TrendingUp, RefreshCw, History, Trash2, Mail as MailIcon, Brain, Trophy,
 } from "lucide-react";
 import { analyzeResume, boostResume, type AnalysisResult, type BoostResult } from "@/lib/resume.functions";
+import { generateCoverLetter, type CoverLetterResult } from "@/lib/coach.functions";
 import { downloadAnalysisPdf } from "@/lib/report-pdf";
+import { loadVersions, saveVersion, deleteVersion, formatTimeAgo, type Version } from "@/lib/history";
 
 
 export const Route = createFileRoute("/sandbox")({
@@ -136,6 +138,18 @@ function Sandbox() {
   const [reanalyzing, setReanalyzing] = useState(false);
   const [boostError, setBoostError] = useState<string | null>(null);
 
+  // Cover letter state
+  const coverLetter = useServerFn(generateCoverLetter);
+  const [company, setCompany] = useState("");
+  const [letterLoading, setLetterLoading] = useState(false);
+  const [letterError, setLetterError] = useState<string | null>(null);
+  const [letter, setLetter] = useState<CoverLetterResult | null>(null);
+
+  // Version history (localStorage)
+  const [versions, setVersions] = useState<Version[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  useEffect(() => { setVersions(loadVersions()); }, []);
+
   const canRun = text.trim().length >= 50 && !loading && !extracting;
   const charCount = text.length;
 
@@ -184,15 +198,54 @@ function Sandbox() {
     if (f) onFile(f);
   };
 
+
   const run = async () => {
     setLoading(true); setError(null); setResult(null);
     setBoostResult(null); setBoostedScore(null); setBoostError(null);
+    setLetter(null); setLetterError(null);
     try {
       const r = await analyze({ data: { text: text.trim(), jobTarget: jobTarget.trim() } });
       setResult(r);
+      // Auto-save to local version history
+      saveVersion({
+        label: fileName || `Analysis ${new Date().toLocaleString()}`,
+        score: r.score,
+        jobTarget: jobTarget.trim(),
+        fileName,
+        text: text.trim(),
+        result: r,
+      });
+      setVersions(loadVersions());
     } catch (e: any) {
       setError(e?.message || "Analysis failed");
     } finally { setLoading(false); }
+  };
+
+  const runCoverLetter = async () => {
+    if (!text.trim() || !jobTarget.trim()) return;
+    setLetterLoading(true); setLetterError(null); setLetter(null);
+    try {
+      const r = await coverLetter({ data: {
+        resume: text.trim(),
+        jobTarget: jobTarget.trim(),
+        company: company.trim() || undefined,
+      }});
+      setLetter(r);
+    } catch (e: any) {
+      setLetterError(e?.message || "Cover letter failed");
+    } finally { setLetterLoading(false); }
+  };
+
+  const loadVersion = (v: Version) => {
+    setText(v.text); setJobTarget(v.jobTarget); setFileName(v.fileName);
+    setResult(v.result); setBoostResult(null); setBoostedScore(null);
+    setLetter(null); setHistoryOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const removeVersion = (id: string) => {
+    deleteVersion(id);
+    setVersions(loadVersions());
   };
 
   const reanalyzeBoosted = async (rewritten?: string) => {
@@ -263,7 +316,22 @@ function Sandbox() {
         <div className="font-display text-sm font-semibold">
           Resume <span className="neon-text">Sandbox</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="relative flex items-center gap-2">
+          <Link to="/interview" className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/85 transition hover:border-[#38BDF8]/50" title="AI Interview Prep">
+            <Brain className="h-3.5 w-3.5" /> Interview
+          </Link>
+          <Link to="/predict" className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/85 transition hover:border-[#38BDF8]/50" title="Placement Predictor">
+            <Trophy className="h-3.5 w-3.5" /> Predict
+          </Link>
+          {versions.length > 0 && (
+            <button
+              onClick={() => setHistoryOpen((o) => !o)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/90 transition hover:border-[#38BDF8]/60"
+              title="Version history"
+            >
+              <History className="h-3.5 w-3.5" /> History <span className="rounded-full bg-white/10 px-1.5 text-[10px]">{versions.length}</span>
+            </button>
+          )}
           {result && (
             <button
               onClick={() => downloadAnalysisPdf(result, { fileName, jobTarget })}
@@ -272,6 +340,44 @@ function Sandbox() {
             >
               <Download className="h-3.5 w-3.5" /> Report
             </button>
+          )}
+
+          {historyOpen && (
+            <div className="absolute right-0 top-full z-40 mt-2 w-[min(420px,90vw)] rounded-2xl border border-white/10 bg-[#040814]/95 p-3 shadow-2xl backdrop-blur-xl">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="text-xs uppercase tracking-widest text-white/60">Version history</div>
+                <button onClick={() => setHistoryOpen(false)} className="text-white/50 hover:text-white"><X className="h-4 w-4" /></button>
+              </div>
+              <div className="max-h-[60vh] space-y-1.5 overflow-auto">
+                {versions.map((v) => {
+                  const prev = versions.find((x) => x.createdAt < v.createdAt);
+                  const delta = prev ? v.score - prev.score : null;
+                  return (
+                    <div key={v.id} className="group flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-2 hover:border-white/20">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#1E3A8A]/50 to-[#38BDF8]/40 font-display text-sm font-bold text-white">
+                        {v.score}
+                      </div>
+                      <button onClick={() => loadVersion(v)} className="min-w-0 flex-1 text-left">
+                        <div className="truncate text-sm text-white/90">{v.label}</div>
+                        <div className="flex items-center gap-2 text-[11px] text-white/50">
+                          <span>{formatTimeAgo(v.createdAt)}</span>
+                          {delta !== null && (
+                            <span className={delta >= 0 ? "text-[#22C55E]" : "text-[#F5B942]"}>
+                              {delta >= 0 ? "+" : ""}{delta} vs prev
+                            </span>
+                          )}
+                          {v.jobTarget && <span className="truncate">· {v.jobTarget.slice(0, 30)}</span>}
+                        </div>
+                      </button>
+                      <button onClick={() => removeVersion(v.id)} className="rounded-md p-1.5 text-white/40 opacity-0 transition hover:bg-white/5 hover:text-red-300 group-hover:opacity-100">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-2 text-[10px] text-white/40">Saved locally in your browser · last 20 analyses</div>
+            </div>
           )}
         </div>
 
@@ -568,6 +674,107 @@ function Sandbox() {
               >
                 <Download className="h-4 w-4" /> Download full PDF report
               </button>
+
+              {/* ---------- COVER LETTER ---------- */}
+              <div className="glass-strong relative overflow-hidden p-5">
+                <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#38BDF8]/15 blur-3xl" />
+                <div className="relative">
+                  <div className="mb-1 flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#1E3A8A]/60 to-[#38BDF8]/50 neon-ring">
+                      <MailIcon className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="font-display text-base font-semibold">AI Cover Letter</div>
+                  </div>
+                  <p className="mb-3 text-xs text-white/60">
+                    Tailored to your resume + target JD. 180-260 words, no fluff, ready to paste.
+                  </p>
+
+                  <input
+                    value={company} onChange={(e) => setCompany(e.target.value)}
+                    placeholder="Company name (optional) — e.g. Razorpay"
+                    className="mb-2 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white/90 outline-none placeholder:text-white/35 focus:border-[#38BDF8]/60"
+                  />
+
+                  {!letter && (
+                    <button
+                      onClick={runCoverLetter}
+                      disabled={letterLoading || !jobTarget.trim()}
+                      className="pill pill-hover w-full justify-center text-sm disabled:opacity-50"
+                      title={!jobTarget.trim() ? "Add a target role/JD above first" : ""}
+                    >
+                      {letterLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MailIcon className="h-4 w-4" />}
+                      {letterLoading ? "Drafting letter…" : jobTarget.trim() ? "Generate cover letter" : "Add a target JD above first"}
+                    </button>
+                  )}
+
+                  {letterError && (
+                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2 text-xs text-red-200">
+                      <CircleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {letterError}
+                    </div>
+                  )}
+
+                  {letter && (
+                    <div className="mt-2 space-y-3">
+                      <div className="rounded-lg border border-[#38BDF8]/30 bg-[#38BDF8]/5 p-3">
+                        <div className="text-[10px] uppercase tracking-widest text-white/55">Subject</div>
+                        <div className="text-sm text-white font-medium">{letter.subject}</div>
+                      </div>
+                      <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+                        <div className="text-[10px] uppercase tracking-widest text-white/55">Hook</div>
+                        <div className="text-sm italic text-white/85">"{letter.hook}"</div>
+                      </div>
+                      {letter.key_matches.length > 0 && (
+                        <div>
+                          <div className="mb-1 text-[10px] uppercase tracking-widest text-white/55">Resume ↔ JD alignment</div>
+                          <ul className="space-y-1">
+                            {letter.key_matches.map((k) => (
+                              <li key={k} className="flex items-start gap-2 text-xs text-white/80">
+                                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#22C55E]" /> {k}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      <div>
+                        <div className="mb-1 flex items-center justify-between">
+                          <div className="text-[10px] uppercase tracking-widest text-white/55">Letter</div>
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(letter.letter); setCopied("cl"); setTimeout(() => setCopied(null), 1400); }}
+                            className="inline-flex items-center gap-1 text-[11px] text-white/60 hover:text-white"
+                          >
+                            {copied === "cl" ? <Check className="h-3 w-3 text-[#22C55E]" /> : <Copy className="h-3 w-3" />}
+                            {copied === "cl" ? "Copied" : "Copy"}
+                          </button>
+                        </div>
+                        <pre className="max-h-72 overflow-auto rounded-lg border border-white/10 bg-black/40 p-3 text-[12px] leading-relaxed text-white/90 whitespace-pre-wrap font-sans">
+{letter.letter}
+                        </pre>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={runCoverLetter} disabled={letterLoading}
+                          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs text-white/90 hover:border-[#38BDF8]/60 disabled:opacity-50">
+                          {letterLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                          Regenerate
+                        </button>
+                        <button
+                          onClick={() => {
+                            const blob = new Blob([`Subject: ${letter.subject}\n\n${letter.letter}`], { type: "text/plain;charset=utf-8" });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url; a.download = "cover-letter.txt";
+                            document.body.appendChild(a); a.click(); a.remove();
+                            URL.revokeObjectURL(url);
+                          }}
+                          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs text-white/90 hover:border-[#38BDF8]/60"
+                        >
+                          <Download className="h-3.5 w-3.5" /> Download .txt
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
 
               {/* ---------- BOOST RESUME ---------- */}
               <div className="glass-strong relative overflow-hidden p-5">
