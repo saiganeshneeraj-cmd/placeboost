@@ -83,6 +83,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "AI-driven resume analysis, ATS scoring, and placement prediction for students." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "PlaceBoost — AI Placement Copilot" },
+      { name: "twitter:description", content: "AI-driven resume analysis, ATS scoring, and placement prediction for students." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/33b10ac0-6211-405a-930c-36c1fe57c05e" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/33b10ac0-6211-405a-930c-36c1fe57c05e" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
