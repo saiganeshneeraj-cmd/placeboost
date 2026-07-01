@@ -77,9 +77,9 @@ function Header() {
           </button>
         ))}
       </nav>
-      <button className="pill pill-hover text-sm">
+      <Link to="/sandbox" className="pill pill-hover text-sm">
         <Sparkles className="h-4 w-4" /> Launch Analysis
-      </button>
+      </Link>
     </header>
   );
 }
