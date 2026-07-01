@@ -5,11 +5,16 @@ import {
   ArrowLeft, Upload, FileText, Sparkles, CircleAlert, CheckCircle2,
   Loader2, Wand2, Target, X, Download, Copy, Check, Mail, Phone, Linkedin, Github,
   Rocket, TrendingUp, RefreshCw, History, Trash2, Mail as MailIcon, Brain, Trophy,
+  LogIn, LogOut, Cloud, CloudOff,
 } from "lucide-react";
 import { analyzeResume, boostResume, type AnalysisResult, type BoostResult } from "@/lib/resume.functions";
 import { generateCoverLetter, type CoverLetterResult } from "@/lib/coach.functions";
 import { downloadAnalysisPdf } from "@/lib/report-pdf";
-import { loadVersions, saveVersion, deleteVersion, formatTimeAgo, type Version } from "@/lib/history";
+import {
+  loadVersions, saveVersion, formatTimeAgo,
+  syncFromCloud, mirrorToCloud, deleteEverywhere, type Version,
+} from "@/lib/history";
+import { useAuth } from "@/hooks/use-auth";
 
 
 export const Route = createFileRoute("/sandbox")({
@@ -161,10 +166,17 @@ function Sandbox() {
   const [letterError, setLetterError] = useState<string | null>(null);
   const [letter, setLetter] = useState<CoverLetterResult | null>(null);
 
-  // Version history (localStorage)
+  // Version history (localStorage + cloud when signed in)
+  const auth = useAuth();
   const [versions, setVersions] = useState<Version[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
   useEffect(() => { setVersions(loadVersions()); }, []);
+  // When signed-in state changes, pull cloud history and merge into the list.
+  useEffect(() => {
+    if (!auth.loading && auth.user) {
+      syncFromCloud().then((list) => setVersions(list)).catch(() => {});
+    }
+  }, [auth.loading, auth.user?.id]);
 
   const canRun = text.trim().length >= 50 && !loading && !extracting;
   const charCount = text.length;
@@ -222,8 +234,8 @@ function Sandbox() {
     try {
       const r = await analyze({ data: { text: text.trim(), jobTarget: jobTarget.trim() } });
       setResult(r);
-      // Auto-save to local version history
-      saveVersion({
+      // Auto-save locally, mirror to cloud when signed in
+      const saved = saveVersion({
         label: fileName || `Analysis ${new Date().toLocaleString()}`,
         score: r.score,
         jobTarget: jobTarget.trim(),
@@ -232,6 +244,9 @@ function Sandbox() {
         result: r,
       });
       setVersions(loadVersions());
+      if (auth.user) {
+        mirrorToCloud(saved).then(() => setVersions(loadVersions())).catch(() => {});
+      }
     } catch (e: any) {
       setError(e?.message || "Analysis failed");
     } finally { setLoading(false); }
@@ -259,8 +274,8 @@ function Sandbox() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const removeVersion = (id: string) => {
-    deleteVersion(id);
+  const removeVersion = async (v: Version) => {
+    await deleteEverywhere(v);
     setVersions(loadVersions());
   };
 
