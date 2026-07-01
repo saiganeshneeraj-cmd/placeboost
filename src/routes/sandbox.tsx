@@ -4,9 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft, Upload, FileText, Sparkles, CircleAlert, CheckCircle2,
   Loader2, Wand2, Target, X, Download, Copy, Check, Mail, Phone, Linkedin, Github,
+  Rocket, TrendingUp, RefreshCw,
 } from "lucide-react";
-import { analyzeResume, type AnalysisResult } from "@/lib/resume.functions";
+import { analyzeResume, boostResume, type AnalysisResult, type BoostResult } from "@/lib/resume.functions";
 import { downloadAnalysisPdf } from "@/lib/report-pdf";
+
 
 export const Route = createFileRoute("/sandbox")({
   head: () => ({
