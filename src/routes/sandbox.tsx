@@ -604,29 +604,6 @@ function Sandbox() {
 
                   {boostResult && (
                     <div className="mt-2 space-y-3">
-                      {/* Score delta */}
-                      <div className="grid grid-cols-3 gap-2 text-center">
-                        <div className="rounded-lg border border-white/10 bg-white/5 p-2">
-                          <div className="text-[10px] uppercase tracking-widest text-white/50">Before</div>
-                          <div className="font-display text-xl font-bold text-white">{result.score}</div>
-                        </div>
-                        <div className="rounded-lg border border-[#7A5CFF]/40 bg-[#7A5CFF]/10 p-2">
-                          <div className="text-[10px] uppercase tracking-widest text-white/70">
-                            {boostedScore ? "New (re-scored)" : "Projected"}
-                          </div>
-                          <div className="font-display text-xl font-bold neon-text">
-                            {boostedScore ? boostedScore.score : boostResult.projected_score}
-                          </div>
-                        </div>
-                        <div className="rounded-lg border border-[#22C55E]/40 bg-[#22C55E]/10 p-2">
-                          <div className="text-[10px] uppercase tracking-widest text-[#22C55E]">Lift</div>
-                          <div className="font-display text-xl font-bold text-[#22C55E] inline-flex items-center gap-1">
-                            <TrendingUp className="h-4 w-4" />
-                            +{(boostedScore ? boostedScore.score : boostResult.projected_score) - result.score}
-                          </div>
-                        </div>
-                      </div>
-
                       {/* Score delta — only show verified re-analyzed score to avoid inflated "projected" claims */}
                       <div className="grid grid-cols-3 gap-2 text-center">
                         <div className="rounded-lg border border-white/10 bg-white/5 p-2">
@@ -637,13 +614,13 @@ function Sandbox() {
                           <div className="text-[10px] uppercase tracking-widest text-white/70">
                             {boostedScore ? "New (verified)" : reanalyzing ? "Verifying…" : "New"}
                           </div>
-                          <div className="font-display text-xl font-bold neon-text inline-flex items-center gap-1">
+                          <div className="font-display text-xl font-bold neon-text inline-flex items-center justify-center gap-1">
                             {boostedScore ? boostedScore.score : <Loader2 className="h-5 w-5 animate-spin text-white/70" />}
                           </div>
                         </div>
                         <div className={`rounded-lg border p-2 ${boostedScore ? (boostedScore.score - result.score >= 0 ? "border-[#22C55E]/40 bg-[#22C55E]/10" : "border-[#F5B942]/40 bg-[#F5B942]/10") : "border-white/10 bg-white/5"}`}>
                           <div className={`text-[10px] uppercase tracking-widest ${boostedScore ? (boostedScore.score - result.score >= 0 ? "text-[#22C55E]" : "text-[#F5B942]") : "text-white/50"}`}>Lift</div>
-                          <div className={`font-display text-xl font-bold inline-flex items-center gap-1 ${boostedScore ? (boostedScore.score - result.score >= 0 ? "text-[#22C55E]" : "text-[#F5B942]") : "text-white/50"}`}>
+                          <div className={`font-display text-xl font-bold inline-flex items-center justify-center gap-1 ${boostedScore ? (boostedScore.score - result.score >= 0 ? "text-[#22C55E]" : "text-[#F5B942]") : "text-white/50"}`}>
                             {boostedScore ? (
                               <>
                                 <TrendingUp className="h-4 w-4" />
@@ -658,6 +635,8 @@ function Sandbox() {
                           The rewrite scored slightly lower on our strict scanner — try adding real project metrics or a more detailed target JD to give it more signal.
                         </div>
                       )}
+
+                      {boostResult.keywords_added.length > 0 && (
                         <div>
                           <div className="mb-1 text-[10px] uppercase tracking-widest text-white/55">Keywords woven in</div>
                           <div className="flex flex-wrap gap-1.5">
