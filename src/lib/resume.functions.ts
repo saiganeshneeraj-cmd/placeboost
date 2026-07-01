@@ -77,12 +77,22 @@ function tokenize(s: string): string[] {
 function computeHeuristic(text: string, jd: string): HeuristicReport {
   const lower = text.toLowerCase();
   const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
-  const bullets = lines.filter((l) => /^([-•*·▪●]|\d+[.)])/.test(l) || (l.length < 220 && /\w/.test(l) && lines.length > 10));
-  const bulletCount = lines.filter((l) => /^([-•*·▪●]|\d+[.)])/.test(l)).length || bullets.length;
-  const quantified = lines.filter((l) => /(\d+%|\$\d|\d[\d,]*\s?(x|k|m|users|ms|s|hrs|hours|days|weeks|months|reqs|rows|records|customers|downloads|stars|commits))/i.test(l) || /\b\d{2,}\b/.test(l)).length;
+  const bulletLines = lines.filter((l) => /^([-•*·▪●▸►]|\d+[.)])/.test(l));
+  // Fallback: many PDFs lose bullet glyphs on extract. Treat medium-length
+  // lines starting with a verb-like word as bullets so scoring stays fair.
+  const isBulletish = (l: string) =>
+    l.length >= 15 && l.length <= 240 && /^[A-Z]?[a-z]+(ed|ing|s)?\b/.test(l);
+  const effectiveBullets = bulletLines.length >= 4 ? bulletLines : lines.filter(isBulletish);
+  const bulletCount = effectiveBullets.length;
+  const quantified = effectiveBullets.filter((l) =>
+    /(\d+%|\$\d|\d[\d,]*\s?(x|k|m|users|ms|s|hrs|hours|days|weeks|months|reqs|rows|records|customers|downloads|stars|commits))/i.test(l)
+    || /\b\d{2,}\b/.test(l)
+  ).length;
 
   const words = tokenize(text);
-  const firstWords = lines.map((l) => (l.match(/^[-•*·▪●\d.)\s]*([a-zA-Z]+)/)?.[1] || "").toLowerCase()).filter(Boolean);
+  const firstWords = effectiveBullets
+    .map((l) => (l.match(/^[-•*·▪●▸►\d.)\s]*([a-zA-Z]+)/)?.[1] || "").toLowerCase())
+    .filter(Boolean);
   const verbHits = firstWords.filter((w) => ACTION_VERBS.has(w)).length;
   const bulletish = Math.max(firstWords.length, 1);
 
@@ -99,7 +109,6 @@ function computeHeuristic(text: string, jd: string): HeuristicReport {
     github: /github\.com\/[a-z0-9-]+/i.test(text),
   };
 
-  // JD keyword overlap
   const jdTokens = Array.from(new Set(
     tokenize(jd).filter((t) => t.length > 2 && !STOP.has(t))
   ));

@@ -25,7 +25,6 @@ export const Route = createFileRoute("/sandbox")({
 /* ----------------------------- PDF extraction ----------------------------- */
 async function extractPdfText(file: File): Promise<string> {
   const pdfjs: any = await import("pdfjs-dist");
-  // Vite-native worker URL — resolves at build time, no CDN dependency
   const workerUrl = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
   const buf = await file.arrayBuffer();
@@ -34,7 +33,24 @@ async function extractPdfText(file: File): Promise<string> {
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i);
     const content = await page.getTextContent();
-    out += content.items.map((it: any) => it.str).join(" ") + "\n\n";
+    // Group text runs by y-coordinate so line breaks (bullets, paragraphs) are preserved.
+    // Without this every line collapses to spaces and ATS heuristics can't detect bullets.
+    const lines = new Map<number, { x: number; str: string }[]>();
+    for (const it of content.items as any[]) {
+      if (typeof it?.str !== "string") continue;
+      const y = Math.round((it.transform?.[5] ?? 0) * 2) / 2;
+      const x = it.transform?.[4] ?? 0;
+      const arr = lines.get(y) ?? [];
+      arr.push({ x, str: it.str });
+      lines.set(y, arr);
+    }
+    const ordered = [...lines.entries()]
+      .sort((a, b) => b[0] - a[0])
+      .map(([, runs]) =>
+        runs.sort((a, b) => a.x - b.x).map((r) => r.str).join(" ").replace(/\s+/g, " ").trim()
+      )
+      .filter(Boolean);
+    out += ordered.join("\n") + "\n\n";
   }
   return out.trim();
 }
