@@ -1,11 +1,12 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft, Upload, FileText, Sparkles, CircleAlert, CheckCircle2,
-  Loader2, Wand2, Target, X,
+  Loader2, Wand2, Target, X, Download, Copy, Check, Mail, Phone, Linkedin, Github,
 } from "lucide-react";
 import { analyzeResume, type AnalysisResult } from "@/lib/resume.functions";
+import { downloadAnalysisPdf } from "@/lib/report-pdf";
 
 export const Route = createFileRoute("/sandbox")({
   head: () => ({
@@ -94,11 +95,28 @@ function Bar({ label, value }: { label: string; value: number }) {
   );
 }
 
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+      <div className="text-[10px] uppercase tracking-widest text-white/50">{label}</div>
+      <div className="font-display text-sm font-semibold text-white">{value}</div>
+    </div>
+  );
+}
+
+function ContactChip({ ok, icon, label }: { ok: boolean; icon: React.ReactNode; label: string }) {
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 ${ok ? "border-[#22C55E]/40 bg-[#22C55E]/10 text-[#22C55E]" : "border-white/10 bg-white/5 text-white/40"}`}>
+      {icon} {label} {ok ? "✓" : "✗"}
+    </span>
+  );
+}
+
 /* --------------------------------- Page ---------------------------------- */
 function Sandbox() {
-  const router = useRouter();
   const analyze = useServerFn(analyzeResume);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [copied, setCopied] = useState<string | null>(null);
 
   const [text, setText] = useState("");
   const [jobTarget, setJobTarget] = useState("");
@@ -161,14 +179,25 @@ function Sandbox() {
         <div className="font-display text-sm font-semibold">
           Resume <span className="neon-text">Sandbox</span>
         </div>
-        <button
-          onClick={run}
-          disabled={!canRun}
-          className="pill pill-hover text-sm disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          {loading ? "Analyzing…" : "Analyze"}
-        </button>
+        <div className="flex items-center gap-2">
+          {result && (
+            <button
+              onClick={() => downloadAnalysisPdf(result, { fileName, jobTarget })}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/90 transition hover:border-[#7A5CFF]/60 hover:bg-white/10"
+              title="Download PDF report"
+            >
+              <Download className="h-3.5 w-3.5" /> Report
+            </button>
+          )}
+          <button
+            onClick={run}
+            disabled={!canRun}
+            className="pill pill-hover text-sm disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {loading ? "Analyzing…" : "Analyze"}
+          </button>
+        </div>
       </header>
 
       <main className="mx-auto grid w-[min(1240px,95%)] grid-cols-1 gap-6 pb-20 pt-8 lg:grid-cols-12">
@@ -269,13 +298,24 @@ function Sandbox() {
                 <div className="flex flex-col items-center gap-6 md:flex-row">
                   <ScoreGauge value={result.score} />
                   <div className="flex-1 space-y-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <div className="font-display text-base font-semibold">Metric breakdown</div>
                       {result.role_guess && (
                         <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-widest text-white/70">
                           {result.role_guess}
                         </span>
                       )}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 text-[10px]">
+                      <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-white/70">
+                        Rules <b className="ml-1 text-white">{result.heuristic_score}</b>
+                      </span>
+                      <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-white/70">
+                        AI <b className="ml-1 text-white">{result.ai_score}</b>
+                      </span>
+                      <span className="rounded-full border border-[#7A5CFF]/40 bg-[#7A5CFF]/10 px-2 py-0.5 text-white">
+                        Blended <b className="ml-1">{result.score}</b>
+                      </span>
                     </div>
                     <Bar label="Keywords" value={result.metrics.keywords} />
                     <Bar label="Formatting" value={result.metrics.formatting} />
@@ -284,6 +324,54 @@ function Sandbox() {
                     <Bar label="Skills" value={result.metrics.skills} />
                   </div>
                 </div>
+              </div>
+
+              {/* Deterministic report */}
+              <div className="glass p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="text-xs uppercase tracking-widest text-white/55">Deterministic scan</div>
+                  <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-widest ${
+                    result.heuristic.readability_flag === "clean" ? "border-[#22C55E]/40 bg-[#22C55E]/10 text-[#22C55E]" :
+                    result.heuristic.readability_flag === "dense" ? "border-[#F5B942]/40 bg-[#F5B942]/10 text-[#F5B942]" :
+                    "border-[#EF4444]/40 bg-[#EF4444]/10 text-[#EF4444]"
+                  }`}>{result.heuristic.readability_flag} · {result.heuristic.word_count} words</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <Stat label="Bullets" value={String(result.heuristic.bullet_count)} />
+                  <Stat label="Quantified" value={`${result.heuristic.quantified_pct}%`} />
+                  <Stat label="Action verbs" value={`${result.heuristic.action_verb_pct}%`} />
+                  <Stat label="Hard skills" value={String(result.heuristic.hard_skills_found.length)} />
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {(["contact","summary","education","experience","projects","skills","certifications","achievements"] as const).map((s) => {
+                    const found = result.heuristic.sections_found.includes(s);
+                    return (
+                      <span key={s} className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-widest ${found ? "border-[#22C55E]/40 bg-[#22C55E]/10 text-[#22C55E]" : "border-white/10 bg-white/5 text-white/40 line-through"}`}>
+                        {s}
+                      </span>
+                    );
+                  })}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-white/70">
+                  <ContactChip ok={result.heuristic.contact.email} icon={<Mail className="h-3 w-3" />} label="Email" />
+                  <ContactChip ok={result.heuristic.contact.phone} icon={<Phone className="h-3 w-3" />} label="Phone" />
+                  <ContactChip ok={result.heuristic.contact.linkedin} icon={<Linkedin className="h-3 w-3" />} label="LinkedIn" />
+                  <ContactChip ok={result.heuristic.contact.github} icon={<Github className="h-3 w-3" />} label="GitHub" />
+                </div>
+                {jobTarget.trim().length > 0 && (
+                  <div className="mt-4">
+                    <div className="mb-1 flex items-baseline justify-between text-xs">
+                      <span className="text-white/60">JD keyword match</span>
+                      <span className="font-display font-semibold">{result.heuristic.jd_match_pct}%</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
+                      <div className="h-full" style={{ width: `${result.heuristic.jd_match_pct}%`, background: "linear-gradient(90deg,#4D9CFF,#E000FF)" }} />
+                    </div>
+                    <div className="mt-2 text-[11px] text-white/50">
+                      {result.heuristic.jd_hits.length} hits · {result.heuristic.jd_misses.length} misses
+                    </div>
+                  </div>
+                )}
               </div>
 
               {result.missing_keywords.length > 0 && (
@@ -343,6 +431,39 @@ function Sandbox() {
                   </ul>
                 </div>
               )}
+
+              {result.tailored_bullets.length > 0 && (
+                <div className="glass p-4">
+                  <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-widest text-white/55">
+                    <Wand2 className="h-3.5 w-3.5 text-[#E000FF]" /> Rewritten bullets (copy-ready)
+                  </div>
+                  <ul className="space-y-2">
+                    {result.tailored_bullets.map((b, i) => {
+                      const key = `tb-${i}`;
+                      return (
+                        <li key={key} className="group flex items-start gap-2 rounded-lg border border-white/10 bg-black/20 p-2.5 text-sm text-white/85">
+                          <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[#E000FF]" />
+                          <span className="flex-1">{b}</span>
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(b); setCopied(key); setTimeout(() => setCopied(null), 1400); }}
+                            className="ml-2 shrink-0 rounded-md border border-white/10 bg-white/5 p-1.5 text-white/60 opacity-0 transition group-hover:opacity-100 hover:text-white"
+                            title="Copy"
+                          >
+                            {copied === key ? <Check className="h-3.5 w-3.5 text-[#22C55E]" /> : <Copy className="h-3.5 w-3.5" />}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+
+              <button
+                onClick={() => downloadAnalysisPdf(result, { fileName, jobTarget })}
+                className="pill pill-hover w-full justify-center text-sm"
+              >
+                <Download className="h-4 w-4" /> Download full PDF report
+              </button>
             </>
           )}
         </section>
