@@ -226,8 +226,8 @@ export const analyzeResume = createServerFn({ method: "POST" })
     return { text, jobTarget: (d.jobTarget || "").slice(0, 400) };
   })
   .handler(async ({ data }): Promise<AnalysisResult> => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("AI gateway not configured");
+    // Provider key is validated inside aiChatJSON
+
 
     const hasJd = data.jobTarget.trim().length > 0;
     const heuristic = computeHeuristic(data.text, data.jobTarget);
