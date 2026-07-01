@@ -250,15 +250,8 @@ function Sandbox() {
               <Download className="h-3.5 w-3.5" /> Report
             </button>
           )}
-          <button
-            onClick={run}
-            disabled={!canRun}
-            className="pill pill-hover text-sm disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {loading ? "Analyzing…" : "Analyze"}
-          </button>
         </div>
+
       </header>
 
       <main className="mx-auto grid w-[min(1240px,95%)] grid-cols-1 gap-6 pb-20 pt-8 lg:grid-cols-12">
