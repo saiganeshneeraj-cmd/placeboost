@@ -42,7 +42,7 @@ function AuroraBackdrop() {
         className="pointer-events-none fixed inset-0 -z-[1]"
         style={{
           background:
-            "radial-gradient(600px 600px at var(--mx,50%) var(--my,50%), rgba(224,0,255,0.18), transparent 60%)",
+            "radial-gradient(600px 600px at var(--mx,50%) var(--my,50%), rgba(59,130,246,0.20), transparent 60%)",
           transition: "background 200ms ease",
         }}
       />
@@ -61,7 +61,7 @@ function Header() {
   return (
     <header className="sticky top-4 z-30 mx-auto mt-4 flex w-[min(1240px,95%)] items-center justify-between glass px-4 py-3">
       <div className="flex items-center gap-3">
-        <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#4D00FF] to-[#E000FF] neon-ring">
+        <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#1E3A8A] to-[#38BDF8] neon-ring">
           <Rocket className="h-4 w-4 text-white" />
         </div>
         <div className="font-display text-lg font-semibold tracking-tight">
@@ -72,7 +72,7 @@ function Header() {
       <nav className="hidden items-center gap-1 md:flex">
         {nav.map(({ icon: Icon, label }) => (
           <button key={label} className="group flex items-center gap-2 rounded-full px-3 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white">
-            <Icon className="h-4 w-4 text-[#a78bfa] transition group-hover:text-[#E000FF]" />
+            <Icon className="h-4 w-4 text-[#93C5FD] transition group-hover:text-[#38BDF8]" />
             {label}
           </button>
         ))}
@@ -109,9 +109,9 @@ function ScoreGauge({ value }: { value: number }) {
       <svg width={size} height={size} className="pulse-glow -rotate-90">
         <defs>
           <linearGradient id="gauge" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#4D9CFF" />
-            <stop offset="50%" stopColor="#7A5CFF" />
-            <stop offset="100%" stopColor="#E000FF" />
+            <stop offset="0%" stopColor="#60A5FA" />
+            <stop offset="50%" stopColor="#3B82F6" />
+            <stop offset="100%" stopColor="#38BDF8" />
           </linearGradient>
         </defs>
         <circle cx={size/2} cy={size/2} r={r} strokeWidth={stroke} className="fill-none stroke-white/10" />
@@ -148,7 +148,7 @@ function MetricBar({ label, value, hint }: { label: string; value: number; hint?
           className="h-full rounded-full transition-[width] duration-1000 ease-out"
           style={{
             width: `${w}%`,
-            background: "linear-gradient(90deg,#4D9CFF,#7A5CFF 50%,#E000FF)",
+            background: "linear-gradient(90deg,#60A5FA,#3B82F6 50%,#38BDF8)",
             boxShadow: "0 0 20px rgba(122,92,255,0.5)",
           }}
         />
@@ -166,16 +166,16 @@ function Roadmap({ phases, active, onHover }: { phases: Phase[]; active: string 
       <svg viewBox="0 0 600 140" className="w-full">
         <defs>
           <linearGradient id="pathGrad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#4D9CFF" />
-            <stop offset="60%" stopColor="#7A5CFF" />
-            <stop offset="100%" stopColor="#E000FF" />
+            <stop offset="0%" stopColor="#60A5FA" />
+            <stop offset="60%" stopColor="#3B82F6" />
+            <stop offset="100%" stopColor="#38BDF8" />
           </linearGradient>
         </defs>
         <path d="M40 90 C 160 20, 260 140, 360 60 S 540 100, 560 50" fill="none" stroke="url(#pathGrad)" strokeWidth="2" strokeDasharray="4 6" opacity="0.55"/>
         {[{x:40,y:90,id:phases[0].id},{x:300,y:70,id:phases[1].id},{x:560,y:50,id:phases[2].id}].map((n, i) => {
           const p = phases[i];
           const isActive = active === n.id;
-          const color = p.state === "done" ? "#4D9CFF" : p.state === "active" ? "#E000FF" : "#7A5CFF";
+          const color = p.state === "done" ? "#60A5FA" : p.state === "active" ? "#38BDF8" : "#3B82F6";
           return (
             <g key={n.id} onMouseEnter={() => onHover(n.id)} onMouseLeave={() => onHover(null)} style={{ cursor: "pointer" }}>
               <circle cx={n.x} cy={n.y} r={isActive ? 20 : 14} fill={color} opacity="0.15" />
@@ -196,14 +196,14 @@ function Roadmap({ phases, active, onHover }: { phases: Phase[]; active: string 
               className={`glass p-3 transition ${isActive ? "neon-ring -translate-y-0.5" : ""}`}
             >
               <div className="flex items-center gap-2">
-                <span className={`inline-block h-2 w-2 rounded-full ${p.state === "done" ? "bg-[#4D9CFF]" : p.state === "active" ? "bg-[#E000FF]" : "bg-white/40"}`} />
+                <span className={`inline-block h-2 w-2 rounded-full ${p.state === "done" ? "bg-[#60A5FA]" : p.state === "active" ? "bg-[#38BDF8]" : "bg-white/40"}`} />
                 <div className="text-xs uppercase tracking-widest text-white/60">{p.sub}</div>
               </div>
               <div className="mt-1 font-display text-sm font-semibold">{p.title}</div>
               <ul className="mt-2 space-y-1">
                 {p.items.map((it) => (
                   <li key={it} className="flex items-start gap-2 text-[12px] text-white/70">
-                    <CheckCircle2 className="mt-[2px] h-3 w-3 text-[#7A5CFF]" /> {it}
+                    <CheckCircle2 className="mt-[2px] h-3 w-3 text-[#3B82F6]" /> {it}
                   </li>
                 ))}
               </ul>
@@ -240,14 +240,14 @@ function ArcGauge({ value, label, sub }: { value: number; label: string; sub: st
     <div className="glass p-5">
       <div className="mb-2 flex items-center justify-between">
         <div className="text-xs uppercase tracking-widest text-white/60">{label}</div>
-        <Zap className="h-4 w-4 text-[#E000FF]" />
+        <Zap className="h-4 w-4 text-[#38BDF8]" />
       </div>
       <div className="relative mx-auto" style={{ width: size, height: size / 2 + 20 }}>
         <svg width={size} height={size / 2 + 20} viewBox={`0 0 ${size} ${size / 2 + 20}`}>
           <defs>
             <linearGradient id={`arc-${label}`} x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#4D9CFF" />
-              <stop offset="100%" stopColor="#E000FF" />
+              <stop offset="0%" stopColor="#60A5FA" />
+              <stop offset="100%" stopColor="#38BDF8" />
             </linearGradient>
           </defs>
           <path d={`M ${stroke/2} ${size/2} A ${r} ${r} 0 0 1 ${size - stroke/2} ${size/2}`} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={stroke} strokeLinecap="round"/>
@@ -276,14 +276,14 @@ function PackageDial({ score }: { score: number }) {
     <div className="glass p-5">
       <div className="mb-2 flex items-center justify-between">
         <div className="text-xs uppercase tracking-widest text-white/60">Expected Package</div>
-        <Trophy className="h-4 w-4 text-[#E000FF]" />
+        <Trophy className="h-4 w-4 text-[#38BDF8]" />
       </div>
       <div className="mt-1 flex items-baseline gap-2">
         <div className="font-display text-3xl font-bold neon-text">₹{min}–{max}</div>
         <div className="text-sm text-white/60">LPA</div>
       </div>
       <div className="mt-4 h-2 rounded-full border border-white/10 bg-white/5">
-        <div className="h-full rounded-full transition-[width] duration-1000 ease-out" style={{ width: `${pct}%`, background: "linear-gradient(90deg,#4D9CFF,#E000FF)" }}/>
+        <div className="h-full rounded-full transition-[width] duration-1000 ease-out" style={{ width: `${pct}%`, background: "linear-gradient(90deg,#60A5FA,#38BDF8)" }}/>
       </div>
       <div className="mt-2 flex justify-between text-[10px] uppercase tracking-widest text-white/45">
         <span>Entry</span><span>Mid</span><span>Top-tier</span>
@@ -327,7 +327,7 @@ function Dashboard() {
           <div className="lg:col-span-7 space-y-6">
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#E000FF]" />
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#38BDF8]" />
                 Real-time reactive scoring
               </div>
               <h1 className="font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
@@ -338,7 +338,24 @@ function Dashboard() {
                 PlaceBoost pairs an AI resume sandbox with a gamified roadmap and predictive
                 placement analytics — engineered for students who ship real work.
               </p>
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <Link
+                  to="/sandbox"
+                  className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#1E3A8A] via-[#3B82F6] to-[#38BDF8] px-6 py-3 text-[15px] font-semibold text-white shadow-[0_16px_50px_-12px_rgba(59,130,246,0.7)] ring-1 ring-white/15 transition hover:-translate-y-0.5 hover:shadow-[0_22px_60px_-12px_rgba(56,189,248,0.9)]"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Launch Analysis
+                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                </Link>
+                <a
+                  href="#roadmap"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-[14px] font-medium text-white/80 backdrop-blur transition hover:border-white/20 hover:text-white"
+                >
+                  See the roadmap
+                </a>
+              </div>
             </div>
+
 
             <div className="glass-strong p-6">
               <div className="flex flex-col items-center gap-8 md:flex-row">
@@ -371,7 +388,7 @@ function Dashboard() {
                         <input
                           type="range" min={0} max={100} value={r.v}
                           onChange={(e) => r.set(Number(e.target.value))}
-                          className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-white/10 accent-[#E000FF]"
+                          className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-white/10 accent-[#38BDF8]"
                         />
                         <span className="w-8 text-right font-display text-xs">{r.v}</span>
                       </label>
@@ -391,7 +408,7 @@ function Dashboard() {
                   <div className="flex flex-wrap gap-2">
                     {boost.map((b) => (
                       <span key={b} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/85">
-                        <span className="mr-1 text-[#7A5CFF]">↑</span>{b}
+                        <span className="mr-1 text-[#3B82F6]">↑</span>{b}
                       </span>
                     ))}
                   </div>
@@ -408,7 +425,7 @@ function Dashboard() {
                   <div className="text-xs uppercase tracking-widest text-white/55">Gamified path</div>
                   <div className="font-display text-lg font-semibold">Skill-tree Roadmap</div>
                 </div>
-                <MapIcon className="h-5 w-5 text-[#7A5CFF]" />
+                <MapIcon className="h-5 w-5 text-[#3B82F6]" />
               </div>
               <Roadmap phases={phases} active={activePhase} onHover={setActivePhase} />
             </div>
@@ -420,11 +437,11 @@ function Dashboard() {
 
             <div className="glass p-4">
               <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-white/55">
-                <Target className="h-3.5 w-3.5 text-[#E000FF]" /> Drive target
+                <Target className="h-3.5 w-3.5 text-[#38BDF8]" /> Drive target
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
                 {["Google", "Atlassian", "Razorpay", "Zoho", "Deloitte"].map((c) => (
-                  <button key={c} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80 transition hover:border-[#E000FF]/50 hover:text-white">{c}</button>
+                  <button key={c} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80 transition hover:border-[#38BDF8]/50 hover:text-white">{c}</button>
                 ))}
               </div>
             </div>
@@ -439,12 +456,12 @@ function Dashboard() {
             { icon: Wand2, title: "Resume Builder", body: "Guided wizard with live ATS review at every step.", cta: "Start building" },
           ].map(({ icon: Icon, title, body, cta }) => (
             <div key={title} className="glass group p-5 float-slow transition hover:-translate-y-1">
-              <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#4D00FF]/30 to-[#E000FF]/30 border border-white/10">
-                <Icon className="h-5 w-5 text-[#c4b5fd]" />
+              <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#1E3A8A]/30 to-[#38BDF8]/30 border border-white/10">
+                <Icon className="h-5 w-5 text-[#BAE6FD]" />
               </div>
               <div className="font-display text-base font-semibold">{title}</div>
               <p className="mt-1 text-sm text-white/65">{body}</p>
-              <button className="mt-4 inline-flex items-center gap-1 text-sm text-white/85 transition group-hover:text-[#E000FF]">
+              <button className="mt-4 inline-flex items-center gap-1 text-sm text-white/85 transition group-hover:text-[#38BDF8]">
                 {cta} <ArrowRight className="h-4 w-4" />
               </button>
             </div>
