@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { aiChatJSON } from "./ai-provider";
 
 type Metrics = {
   keywords: number;
