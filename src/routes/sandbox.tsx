@@ -4,10 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft, Upload, FileText, Sparkles, CircleAlert, CheckCircle2,
   Loader2, Wand2, Target, X, Download, Copy, Check, Mail, Phone, Linkedin, Github,
-  Rocket, TrendingUp, RefreshCw,
+  Rocket, TrendingUp, RefreshCw, History, Trash2, Mail as MailIcon, Brain, Trophy,
 } from "lucide-react";
 import { analyzeResume, boostResume, type AnalysisResult, type BoostResult } from "@/lib/resume.functions";
+import { generateCoverLetter, type CoverLetterResult } from "@/lib/coach.functions";
 import { downloadAnalysisPdf } from "@/lib/report-pdf";
+import { loadVersions, saveVersion, deleteVersion, formatTimeAgo, type Version } from "@/lib/history";
 
 
 export const Route = createFileRoute("/sandbox")({
