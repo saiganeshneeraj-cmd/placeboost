@@ -209,6 +209,55 @@ function Sandbox() {
     } finally { setLoading(false); }
   };
 
+  const run = async () => {
+    setLoading(true); setError(null); setResult(null);
+    setBoostResult(null); setBoostedScore(null); setBoostError(null);
+    setLetter(null); setLetterError(null);
+    try {
+      const r = await analyze({ data: { text: text.trim(), jobTarget: jobTarget.trim() } });
+      setResult(r);
+      // Auto-save to local version history
+      saveVersion({
+        label: fileName || `Analysis ${new Date().toLocaleString()}`,
+        score: r.score,
+        jobTarget: jobTarget.trim(),
+        fileName,
+        text: text.trim(),
+        result: r,
+      });
+      setVersions(loadVersions());
+    } catch (e: any) {
+      setError(e?.message || "Analysis failed");
+    } finally { setLoading(false); }
+  };
+
+  const runCoverLetter = async () => {
+    if (!text.trim() || !jobTarget.trim()) return;
+    setLetterLoading(true); setLetterError(null); setLetter(null);
+    try {
+      const r = await coverLetter({ data: {
+        resume: text.trim(),
+        jobTarget: jobTarget.trim(),
+        company: company.trim() || undefined,
+      }});
+      setLetter(r);
+    } catch (e: any) {
+      setLetterError(e?.message || "Cover letter failed");
+    } finally { setLetterLoading(false); }
+  };
+
+  const loadVersion = (v: Version) => {
+    setText(v.text); setJobTarget(v.jobTarget); setFileName(v.fileName);
+    setResult(v.result); setBoostResult(null); setBoostedScore(null);
+    setLetter(null); setHistoryOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const removeVersion = (id: string) => {
+    deleteVersion(id);
+    setVersions(loadVersions());
+  };
+
   const reanalyzeBoosted = async (rewritten?: string) => {
     const source = rewritten ?? boostResult?.rewritten_resume;
     if (!source) return;
