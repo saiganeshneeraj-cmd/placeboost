@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { aiChatJSON } from "./ai-provider";
 
 type Metrics = {
   keywords: number;
@@ -225,8 +226,8 @@ export const analyzeResume = createServerFn({ method: "POST" })
     return { text, jobTarget: (d.jobTarget || "").slice(0, 400) };
   })
   .handler(async ({ data }): Promise<AnalysisResult> => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("AI gateway not configured");
+    // Provider key is validated inside aiChatJSON
+
 
     const hasJd = data.jobTarget.trim().length > 0;
     const heuristic = computeHeuristic(data.text, data.jobTarget);
@@ -251,28 +252,10 @@ ${data.text}
 Return JSON exactly matching:
 ${SCHEMA_HINT}`;
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: SYSTEM },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: { type: "json_object" },
-      }),
-    });
-
-    if (res.status === 429) throw new Error("Rate limit hit — try again in a moment.");
-    if (res.status === 402) throw new Error("AI credits exhausted. Add credits in workspace settings.");
-    if (!res.ok) {
-      const t = await res.text().catch(() => "");
-      throw new Error(`AI gateway error ${res.status}: ${t.slice(0, 200)}`);
-    }
-
-    const json = await res.json();
-    const content: string = json?.choices?.[0]?.message?.content ?? "";
+    const content = await aiChatJSON([
+      { role: "system", content: SYSTEM },
+      { role: "user", content: userPrompt },
+    ]);
     let parsed: any;
     try { parsed = JSON.parse(content); }
     catch {
@@ -280,6 +263,7 @@ ${SCHEMA_HINT}`;
       if (!m) throw new Error("Model returned non-JSON output");
       parsed = JSON.parse(m[0]);
     }
+
 
     const clamp = (n: unknown) => Math.max(0, Math.min(100, Math.round(Number(n) || 0)));
     const ai_score = clamp(parsed.score);
@@ -359,9 +343,6 @@ export const boostResume = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data }): Promise<BoostResult> => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("AI gateway not configured");
-
     const userPrompt = `Target role / JD: ${data.jobTarget || "General SDE / Software Engineer roles in India"}
 ${data.missingKeywords.length ? `High-yield keywords to weave in truthfully where they apply: ${data.missingKeywords.join(", ")}` : ""}
 
@@ -373,28 +354,10 @@ ${data.text}
 Return JSON exactly matching:
 ${BOOST_SCHEMA}`;
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: BOOST_SYSTEM },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: { type: "json_object" },
-      }),
-    });
-
-    if (res.status === 429) throw new Error("Rate limit hit — try again in a moment.");
-    if (res.status === 402) throw new Error("AI credits exhausted. Add credits in workspace settings.");
-    if (!res.ok) {
-      const t = await res.text().catch(() => "");
-      throw new Error(`AI gateway error ${res.status}: ${t.slice(0, 200)}`);
-    }
-
-    const json = await res.json();
-    const content: string = json?.choices?.[0]?.message?.content ?? "";
+    const content = await aiChatJSON([
+      { role: "system", content: BOOST_SYSTEM },
+      { role: "user", content: userPrompt },
+    ]);
     let parsed: any;
     try { parsed = JSON.parse(content); }
     catch {
@@ -402,6 +365,7 @@ ${BOOST_SCHEMA}`;
       if (!m) throw new Error("Model returned non-JSON output");
       parsed = JSON.parse(m[0]);
     }
+
 
     const clamp = (n: unknown) => Math.max(0, Math.min(100, Math.round(Number(n) || 0)));
     return {
