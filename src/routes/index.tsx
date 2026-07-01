@@ -53,10 +53,9 @@ function AuroraBackdrop() {
 /* --------------------------------- Header --------------------------------- */
 function Header() {
   const nav = [
-    { icon: FileText, label: "Resume" },
-    { icon: MapIcon, label: "Roadmap" },
-    { icon: LineChart, label: "Prediction" },
-    { icon: Wand2, label: "Builder" },
+    { icon: FileText, label: "Resume", to: "/sandbox" as const },
+    { icon: Cpu, label: "Interview", to: "/interview" as const },
+    { icon: LineChart, label: "Predict", to: "/predict" as const },
   ];
   return (
     <header className="sticky top-4 z-30 mx-auto mt-4 flex w-[min(1240px,95%)] items-center justify-between glass px-4 py-3">
