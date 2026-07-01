@@ -117,6 +117,7 @@ function ContactChip({ ok, icon, label }: { ok: boolean; icon: React.ReactNode; 
 /* --------------------------------- Page ---------------------------------- */
 function Sandbox() {
   const analyze = useServerFn(analyzeResume);
+  const boost = useServerFn(boostResume);
   const fileRef = useRef<HTMLInputElement>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
@@ -127,6 +128,13 @@ function Sandbox() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+
+  // Booster state
+  const [boosting, setBoosting] = useState(false);
+  const [boostResult, setBoostResult] = useState<BoostResult | null>(null);
+  const [boostedScore, setBoostedScore] = useState<AnalysisResult | null>(null);
+  const [reanalyzing, setReanalyzing] = useState(false);
+  const [boostError, setBoostError] = useState<string | null>(null);
 
   const canRun = text.trim().length >= 50 && !loading && !extracting;
   const charCount = text.length;
@@ -159,6 +167,7 @@ function Sandbox() {
 
   const run = async () => {
     setLoading(true); setError(null); setResult(null);
+    setBoostResult(null); setBoostedScore(null); setBoostError(null);
     try {
       const r = await analyze({ data: { text: text.trim(), jobTarget: jobTarget.trim() } });
       setResult(r);
@@ -167,7 +176,57 @@ function Sandbox() {
     } finally { setLoading(false); }
   };
 
-  const clear = () => { setText(""); setFileName(null); setResult(null); setError(null); };
+  const runBoost = async () => {
+    if (!result) return;
+    setBoosting(true); setBoostError(null); setBoostResult(null); setBoostedScore(null);
+    try {
+      const r = await boost({ data: {
+        text: text.trim(),
+        jobTarget: jobTarget.trim(),
+        missingKeywords: result.missing_keywords,
+      }});
+      setBoostResult(r);
+    } catch (e: any) {
+      setBoostError(e?.message || "Boost failed");
+    } finally { setBoosting(false); }
+  };
+
+  const reanalyzeBoosted = async () => {
+    if (!boostResult) return;
+    setReanalyzing(true); setBoostError(null);
+    try {
+      const r = await analyze({ data: { text: boostResult.rewritten_resume, jobTarget: jobTarget.trim() } });
+      setBoostedScore(r);
+    } catch (e: any) {
+      setBoostError(e?.message || "Re-analysis failed");
+    } finally { setReanalyzing(false); }
+  };
+
+  const useBoostedAsInput = () => {
+    if (!boostResult) return;
+    setText(boostResult.rewritten_resume);
+    setResult(boostedScore ?? null);
+    setBoostResult(null);
+    setBoostedScore(null);
+    setFileName(fileName ? `${fileName} (boosted)` : "boosted-resume.txt");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const downloadBoostedTxt = () => {
+    if (!boostResult) return;
+    const blob = new Blob([boostResult.rewritten_resume], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "placeboost-resume.txt";
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const clear = () => {
+    setText(""); setFileName(null); setResult(null); setError(null);
+    setBoostResult(null); setBoostedScore(null); setBoostError(null);
+  };
+
 
   return (
     <div className="min-h-screen text-white">
