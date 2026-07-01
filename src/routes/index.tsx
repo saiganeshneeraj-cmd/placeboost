@@ -338,7 +338,24 @@ function Dashboard() {
                 PlaceBoost pairs an AI resume sandbox with a gamified roadmap and predictive
                 placement analytics — engineered for students who ship real work.
               </p>
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <Link
+                  to="/sandbox"
+                  className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#1E3A8A] via-[#3B82F6] to-[#38BDF8] px-6 py-3 text-[15px] font-semibold text-white shadow-[0_16px_50px_-12px_rgba(59,130,246,0.7)] ring-1 ring-white/15 transition hover:-translate-y-0.5 hover:shadow-[0_22px_60px_-12px_rgba(56,189,248,0.9)]"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Launch Analysis
+                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                </Link>
+                <a
+                  href="#roadmap"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-[14px] font-medium text-white/80 backdrop-blur transition hover:border-white/20 hover:text-white"
+                >
+                  See the roadmap
+                </a>
+              </div>
             </div>
+
 
             <div className="glass-strong p-6">
               <div className="flex flex-col items-center gap-8 md:flex-row">
