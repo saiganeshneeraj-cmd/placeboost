@@ -301,50 +301,38 @@ function Dashboard() {
       <AuroraBackdrop />
       <Header />
 
-      <main className="mx-auto w-[min(1180px,92%)] pb-32">
+      <main className="mx-auto w-[min(1180px,92%)] pb-24">
         {/* HERO — centered, minimal */}
-        <section className="flex min-h-[78vh] flex-col items-center justify-center text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-3.5 py-1.5 text-[11px] uppercase tracking-[0.18em] text-white/70 backdrop-blur">
+        <section className="flex min-h-[72vh] flex-col items-center justify-center text-center">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-3.5 py-1.5 text-[11px] uppercase tracking-[0.18em] text-white/70 backdrop-blur">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#7DD3FC]" />
             AI Placement Copilot
           </div>
 
-          <h1 className="font-display text-[52px] font-semibold leading-[1.02] tracking-[-0.035em] text-white md:text-[80px]">
+          <h1 className="font-display text-[46px] font-semibold leading-[1.02] tracking-[-0.035em] text-white md:text-[76px]">
             Land the offer.
             <br />
             <span className="neon-text">Not just the interview.</span>
           </h1>
 
-          <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-white/65 md:text-[16px]">
-            Real-time ATS scoring, an AI resume booster, and a gamified skill roadmap —
-            engineered for students who ship real work.
+          <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/60 md:text-[16px]">
+            Real-time ATS scoring, AI resume booster, and a gamified skill roadmap.
           </p>
 
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              to="/sandbox"
-              className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#1E3A8A] via-[#3B82F6] to-[#38BDF8] px-7 py-3.5 text-[15px] font-semibold text-white shadow-[0_20px_60px_-15px_rgba(59,130,246,0.75)] ring-1 ring-white/20 transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-15px_rgba(56,189,248,0.95)]"
-            >
-              <Sparkles className="h-4 w-4" />
-              Launch Analysis
-              <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-            </Link>
-            <a
-              href="#features"
-              className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.03] px-6 py-3.5 text-[14px] font-medium text-white/75 backdrop-blur transition hover:border-white/25 hover:text-white"
-            >
-              Explore features
-            </a>
-          </div>
+          <Link
+            to="/sandbox"
+            className="group mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#1E3A8A] via-[#3B82F6] to-[#38BDF8] px-8 py-4 text-[15px] font-semibold text-white shadow-[0_20px_60px_-15px_rgba(59,130,246,0.75)] ring-1 ring-white/20 transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-15px_rgba(56,189,248,0.95)]"
+          >
+            <Sparkles className="h-4 w-4" />
+            Analyze my resume
+            <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+          </Link>
 
-          <div className="mt-14 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[11px] uppercase tracking-[0.2em] text-white/40">
-            <span>ATS-accurate scoring</span>
-            <span className="h-1 w-1 rounded-full bg-white/25" />
-            <span>AI resume booster</span>
-            <span className="h-1 w-1 rounded-full bg-white/25" />
-            <span>PDF report export</span>
+          <div className="mt-6 text-[12px] text-white/45">
+            Free · No signup · Instant score
           </div>
         </section>
+
 
         {/* FEATURE STRIP — quiet, three cards */}
         <section id="features" className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">

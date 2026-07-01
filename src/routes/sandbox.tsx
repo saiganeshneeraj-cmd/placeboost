@@ -22,11 +22,10 @@ export const Route = createFileRoute("/sandbox")({
 
 /* ----------------------------- PDF extraction ----------------------------- */
 async function extractPdfText(file: File): Promise<string> {
-  // Dynamic import so pdfjs only loads when needed
-  const pdfjs: any = await import(/* @vite-ignore */ "pdfjs-dist/build/pdf.mjs" as string);
-  // Use worker from CDN matching version to avoid bundler wiring
-  pdfjs.GlobalWorkerOptions.workerSrc =
-    `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+  const pdfjs: any = await import("pdfjs-dist");
+  // Vite-native worker URL — resolves at build time, no CDN dependency
+  const workerUrl = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
+  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
   const buf = await file.arrayBuffer();
   const doc = await pdfjs.getDocument({ data: buf }).promise;
   let out = "";
