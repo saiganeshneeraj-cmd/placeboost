@@ -126,6 +126,7 @@ function Sandbox() {
   const [extracting, setExtracting] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastFile, setLastFile] = useState<File | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
   // Booster state
@@ -140,23 +141,42 @@ function Sandbox() {
 
   const onFile = useCallback(async (f: File) => {
     setError(null);
-    if (f.size > 8 * 1024 * 1024) { setError("File too large (max 8MB)."); return; }
+    setLastFile(f);
+    if (f.size > 8 * 1024 * 1024) {
+      setError(`"${f.name}" is ${(f.size / 1024 / 1024).toFixed(1)} MB — max is 8 MB. Try compressing or exporting a text-only PDF.`);
+      return;
+    }
     setFileName(f.name);
-    if (f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")) {
+    const isPdf = f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf");
+    if (isPdf) {
       setExtracting(true);
       try {
         const t = await extractPdfText(f);
-        if (!t || t.length < 50) throw new Error("Couldn't extract text — this PDF may be scanned images.");
+        if (!t || t.length < 50) throw new Error("SCANNED");
         setText(t);
       } catch (e: any) {
-        setError(e?.message || "PDF extraction failed");
+        const msg = String(e?.message || e || "");
+        if (msg === "SCANNED") {
+          setError("This PDF looks like scanned images — no selectable text was found. Try re-exporting from Word / Google Docs as a text-based PDF, or paste your resume text below.");
+        } else if (/password|encrypt/i.test(msg)) {
+          setError("This PDF is password-protected. Remove the password and re-upload, or paste the text directly.");
+        } else if (/worker|module|resolve|import|fetch/i.test(msg)) {
+          setError("Couldn't load the PDF parser. Check your internet connection and hit Retry.");
+        } else if (/invalid|corrupt|badpdf|InvalidPDF/i.test(msg)) {
+          setError("The file isn't a valid PDF or is corrupted. Try re-exporting it.");
+        } else {
+          setError(`PDF extraction failed: ${msg.slice(0, 160) || "unknown error"}. You can retry or paste the text below.`);
+        }
       } finally { setExtracting(false); }
     } else if (f.type.startsWith("text/") || /\.(txt|md)$/i.test(f.name)) {
-      setText(await f.text());
+      try { setText(await f.text()); }
+      catch (e: any) { setError(`Couldn't read "${f.name}": ${e?.message || "unknown error"}`); }
     } else {
-      setError("Unsupported file type. Use PDF or paste text.");
+      setError(`Unsupported file type "${f.type || f.name.split(".").pop()}". Upload a PDF or .txt, or paste your resume text.`);
     }
   }, []);
+
+  const retryUpload = () => { if (lastFile) onFile(lastFile); };
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
