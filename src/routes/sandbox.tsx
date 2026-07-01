@@ -97,9 +97,9 @@ function Bar({ label, value }: { label: string; value: number }) {
 
 /* --------------------------------- Page ---------------------------------- */
 function Sandbox() {
-  const router = useRouter();
   const analyze = useServerFn(analyzeResume);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [copied, setCopied] = useState<string | null>(null);
 
   const [text, setText] = useState("");
   const [jobTarget, setJobTarget] = useState("");
