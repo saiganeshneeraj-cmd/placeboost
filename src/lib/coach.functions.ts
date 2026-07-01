@@ -62,7 +62,7 @@ export type CoverLetterResult = {
 export const generateCoverLetter = createServerFn({ method: "POST" })
   .inputValidator((d: { resume: string; jobTarget: string; company?: string; tone?: string }) => {
     if (!d?.resume || d.resume.trim().length < 50) throw new Error("Resume too short (min 50 chars).");
-    if (!d?.jobTarget || d.jobTarget.trim().length < 15) throw new Error("Add a target role / JD (min 15 chars) for a tailored letter.");
+    if (!d?.jobTarget || d.jobTarget.trim().length < 3) throw new Error("Add a target role (min 3 chars) so the letter can be tailored.");
     return {
       resume: clampLen(d.resume.trim(), 30000),
       jobTarget: clampLen(d.jobTarget.trim(), 4000),
