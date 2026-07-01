@@ -25,11 +25,26 @@ async function callAI(system: string, user: string): Promise<any> {
   }
   const json = await res.json();
   const content: string = json?.choices?.[0]?.message?.content ?? "";
-  try { return JSON.parse(content); }
+  return extractJson(content);
+}
+
+function extractJson(raw: string): any {
+  if (!raw) throw new Error("Empty response from AI — try again.");
+  let s = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+  const start = s.search(/[\{\[]/);
+  if (start === -1) throw new Error("AI returned non-JSON output — try again.");
+  const closer = s[start] === "[" ? "]" : "}";
+  const end = s.lastIndexOf(closer);
+  if (end === -1 || end < start) throw new Error("AI response was truncated — try again.");
+  s = s.slice(start, end + 1);
+  try { return JSON.parse(s); }
   catch {
-    const m = content.match(/\{[\s\S]*\}/);
-    if (!m) throw new Error("Model returned non-JSON output");
-    return JSON.parse(m[0]);
+    const repaired = s
+      .replace(/,\s*}/g, "}")
+      .replace(/,\s*]/g, "]")
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+    return JSON.parse(repaired);
   }
 }
 
