@@ -431,6 +431,39 @@ function Sandbox() {
                   </ul>
                 </div>
               )}
+
+              {result.tailored_bullets.length > 0 && (
+                <div className="glass p-4">
+                  <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-widest text-white/55">
+                    <Wand2 className="h-3.5 w-3.5 text-[#E000FF]" /> Rewritten bullets (copy-ready)
+                  </div>
+                  <ul className="space-y-2">
+                    {result.tailored_bullets.map((b, i) => {
+                      const key = `tb-${i}`;
+                      return (
+                        <li key={key} className="group flex items-start gap-2 rounded-lg border border-white/10 bg-black/20 p-2.5 text-sm text-white/85">
+                          <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[#E000FF]" />
+                          <span className="flex-1">{b}</span>
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(b); setCopied(key); setTimeout(() => setCopied(null), 1400); }}
+                            className="ml-2 shrink-0 rounded-md border border-white/10 bg-white/5 p-1.5 text-white/60 opacity-0 transition group-hover:opacity-100 hover:text-white"
+                            title="Copy"
+                          >
+                            {copied === key ? <Check className="h-3.5 w-3.5 text-[#22C55E]" /> : <Copy className="h-3.5 w-3.5" />}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+
+              <button
+                onClick={() => downloadAnalysisPdf(result, { fileName, jobTarget })}
+                className="pill pill-hover w-full justify-center text-sm"
+              >
+                <Download className="h-4 w-4" /> Download full PDF report
+              </button>
             </>
           )}
         </section>
