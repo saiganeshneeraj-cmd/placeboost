@@ -294,26 +294,7 @@ function PackageDial({ score }: { score: number }) {
 
 /* --------------------------------- Page ---------------------------------- */
 function Dashboard() {
-  const [keywords, setKeywords] = useState(72);
-  const [format, setFormat] = useState(84);
-  const [structure, setStructure] = useState(78);
-  const [experience, setExperience] = useState(64);
-  const [skills, setSkills] = useState(80);
-  const [activePhase, setActivePhase] = useState<string | null>("p2");
 
-  const score = useMemo(
-    () => Math.round(keywords * 0.3 + format * 0.15 + structure * 0.15 + experience * 0.2 + skills * 0.2),
-    [keywords, format, structure, experience, skills]
-  );
-
-  const buzz = ["Team player", "Hard worker", "Detail oriented"];
-  const boost = ["Shipped", "Optimized (32%)", "Architected", "Automated"];
-
-  const phases: Phase[] = [
-    { id: "p1", sub: "Immediate", title: "Structural cleanup", state: "done", items: ["Fix section overlaps", "Normalize date formatting", "Remove tracking noise"] },
-    { id: "p2", sub: "2 weeks", title: "Keyword injection", state: "active", items: ["Add JD-matched stack terms", "Drop hollow filler words", "Quantify impact bullets"] },
-    { id: "p3", sub: "1–2 months", title: "Portfolio depth", state: "pending", items: ["Deploy 2 flagship projects", "Add CI/CD & tests", "Publish a technical write-up"] },
-  ];
 
   return (
     <div className="min-h-screen text-white">
