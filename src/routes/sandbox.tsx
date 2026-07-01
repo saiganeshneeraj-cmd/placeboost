@@ -5,11 +5,16 @@ import {
   ArrowLeft, Upload, FileText, Sparkles, CircleAlert, CheckCircle2,
   Loader2, Wand2, Target, X, Download, Copy, Check, Mail, Phone, Linkedin, Github,
   Rocket, TrendingUp, RefreshCw, History, Trash2, Mail as MailIcon, Brain, Trophy,
+  LogIn, LogOut, Cloud, CloudOff,
 } from "lucide-react";
 import { analyzeResume, boostResume, type AnalysisResult, type BoostResult } from "@/lib/resume.functions";
 import { generateCoverLetter, type CoverLetterResult } from "@/lib/coach.functions";
 import { downloadAnalysisPdf } from "@/lib/report-pdf";
-import { loadVersions, saveVersion, deleteVersion, formatTimeAgo, type Version } from "@/lib/history";
+import {
+  loadVersions, saveVersion, formatTimeAgo,
+  syncFromCloud, mirrorToCloud, deleteEverywhere, type Version,
+} from "@/lib/history";
+import { useAuth } from "@/hooks/use-auth";
 
 
 export const Route = createFileRoute("/sandbox")({
@@ -161,10 +166,17 @@ function Sandbox() {
   const [letterError, setLetterError] = useState<string | null>(null);
   const [letter, setLetter] = useState<CoverLetterResult | null>(null);
 
-  // Version history (localStorage)
+  // Version history (localStorage + cloud when signed in)
+  const auth = useAuth();
   const [versions, setVersions] = useState<Version[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
   useEffect(() => { setVersions(loadVersions()); }, []);
+  // When signed-in state changes, pull cloud history and merge into the list.
+  useEffect(() => {
+    if (!auth.loading && auth.user) {
+      syncFromCloud().then((list) => setVersions(list)).catch(() => {});
+    }
+  }, [auth.loading, auth.user?.id]);
 
   const canRun = text.trim().length >= 50 && !loading && !extracting;
   const charCount = text.length;
@@ -222,8 +234,8 @@ function Sandbox() {
     try {
       const r = await analyze({ data: { text: text.trim(), jobTarget: jobTarget.trim() } });
       setResult(r);
-      // Auto-save to local version history
-      saveVersion({
+      // Auto-save locally, mirror to cloud when signed in
+      const saved = saveVersion({
         label: fileName || `Analysis ${new Date().toLocaleString()}`,
         score: r.score,
         jobTarget: jobTarget.trim(),
@@ -232,6 +244,9 @@ function Sandbox() {
         result: r,
       });
       setVersions(loadVersions());
+      if (auth.user) {
+        mirrorToCloud(saved).then(() => setVersions(loadVersions())).catch(() => {});
+      }
     } catch (e: any) {
       setError(e?.message || "Analysis failed");
     } finally { setLoading(false); }
@@ -259,8 +274,8 @@ function Sandbox() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const removeVersion = (id: string) => {
-    deleteVersion(id);
+  const removeVersion = async (v: Version) => {
+    await deleteEverywhere(v);
     setVersions(loadVersions());
   };
 
@@ -358,6 +373,34 @@ function Sandbox() {
             </button>
           )}
 
+          {/* Auth control: sign in for cross-device sync, or show account + sign out */}
+          {!auth.loading && (auth.user ? (
+            <div className="flex items-center gap-1.5">
+              <span
+                className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-[#22C55E]/40 bg-[#22C55E]/10 px-2.5 py-1 text-[11px] text-[#22C55E]"
+                title={auth.user.email || "Signed in"}
+              >
+                <Cloud className="h-3 w-3" /> Synced
+              </span>
+              <button
+                onClick={() => auth.signOut()}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/85 transition hover:border-white/30"
+                title={`Sign out ${auth.user.email ?? ""}`}
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span className="hidden md:inline max-w-[120px] truncate">{auth.user.email?.split("@")[0] || "Sign out"}</span>
+              </button>
+            </div>
+          ) : (
+            <Link
+              to="/auth"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#4FA8FF]/40 bg-[#4FA8FF]/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#4FA8FF]/20"
+              title="Sign in to sync history across devices"
+            >
+              <LogIn className="h-3.5 w-3.5" /> Sign in
+            </Link>
+          ))}
+
           {historyOpen && (
             <div className="absolute right-0 top-full z-40 mt-2 w-[min(420px,90vw)] rounded-2xl border border-white/10 bg-[#040814]/95 p-3 shadow-2xl backdrop-blur-xl">
               <div className="mb-2 flex items-center justify-between">
@@ -385,14 +428,21 @@ function Sandbox() {
                           {v.jobTarget && <span className="truncate">· {v.jobTarget.slice(0, 30)}</span>}
                         </div>
                       </button>
-                      <button onClick={() => removeVersion(v.id)} className="rounded-md p-1.5 text-white/40 opacity-0 transition hover:bg-white/5 hover:text-red-300 group-hover:opacity-100">
+                      <button onClick={() => removeVersion(v)} className="rounded-md p-1.5 text-white/40 opacity-0 transition hover:bg-white/5 hover:text-red-300 group-hover:opacity-100">
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   );
                 })}
               </div>
-              <div className="mt-2 text-[10px] text-white/40">Saved locally in your browser · last 20 analyses</div>
+              <div className="mt-2 flex items-center justify-between text-[10px] text-white/40">
+                <span>Last 20 analyses</span>
+                <span className="inline-flex items-center gap-1">
+                  {auth.user
+                    ? <><Cloud className="h-3 w-3 text-[#22C55E]" /> Synced to your account</>
+                    : <><CloudOff className="h-3 w-3" /> Local only — <Link to="/auth" className="underline hover:text-white">sign in</Link> to sync</>}
+                </span>
+              </div>
             </div>
           )}
         </div>

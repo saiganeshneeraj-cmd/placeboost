@@ -211,7 +211,7 @@ const SCHEMA_HINT = `{
   "missing_keywords": string[]     // 6-12 high-impact keywords absent (technical, tools, frameworks),
   "buzzwords": [{ "term": string, "replacement": string }]  // dead phrases found + concrete rewrite (max 6),
   "strengths": string[]            // 3-5 short bullets,
-  "suggestions": string[]          // 5-8 SPECIFIC fixes referencing lines/sections,
+  "suggestions": string[]          // 5-8 SPECIFIC, ACTIONABLE fixes. Each MUST follow this shape: "[SECTION] concrete problem — Fix: exact rewrite or step". Reference the actual section (Experience, Projects, Skills, Summary, Education, Contact) and quote the offending phrase in single quotes when it exists in the resume. Bad: "Add more metrics." Good: "[Projects] 'Built a chat app' has no scale — Fix: 'Built a real-time chat app in Node.js + Socket.IO serving 50 concurrent users with <150 ms message latency.'",
   "tailored_bullets": string[]     // 3-5 rewritten sample bullets from THIS resume with quantified impact + strong verbs,
   "role_guess": string
 }`;
@@ -335,7 +335,7 @@ Return STRICT JSON only.`;
 const BOOST_SCHEMA = `{
   "rewritten_resume": string,       // full plain-text resume, section headers in ALL CAPS
   "projected_score": number,        // realistic ATS score you expect (0-100)
-  "changes": string[],              // 4-8 short bullets describing what you changed & why
+  "changes": string[],              // 4-8 items. Each MUST be shaped as "[SECTION] Before: 'original phrase' → After: 'new phrase' — Why: one short reason". Reference real sections and quote real substrings from the ORIGINAL resume so the user can find them.
   "keywords_added": string[]        // technical keywords you truthfully wove in
 }`;
 
