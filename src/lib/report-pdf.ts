@@ -29,10 +29,10 @@ export function downloadAnalysisPdf(r: AnalysisResult, meta: { fileName?: string
     y += lines.length * size * 1.25;
   };
 
-  const hr = () => { ensure(14); doc.setDrawColor(230); doc.line(M, y + 4, W - M, y + 4); y += 14; };
+  const hr = () => { ensure(14); doc.setDrawColor("#E6E6E6"); doc.line(M, y + 4, W - M, y + 4); y += 14; };
 
   // Header banner
-  doc.setFillColor(122, 92, 255);
+  doc.setFillColor("#7A5CFF");
   doc.rect(0, 0, W, 70, "F");
   doc.setTextColor("#FFFFFF");
   doc.setFont("helvetica", "bold");
@@ -56,7 +56,7 @@ export function downloadAnalysisPdf(r: AnalysisResult, meta: { fileName?: string
   ensure(120);
   const cardW = (W - M * 2 - 24) / 3;
   const scoreCard = (label: string, val: number, x: number, color: string) => {
-    doc.setDrawColor(230); doc.setFillColor(250);
+    doc.setDrawColor("#E6E6E6"); doc.setFillColor("#FAFAFA");
     doc.roundedRect(x, y, cardW, 90, 8, 8, "FD");
     doc.setTextColor(MUTE); doc.setFont("helvetica", "normal"); doc.setFontSize(9);
     doc.text(label.toUpperCase(), x + 14, y + 22);
@@ -77,9 +77,9 @@ export function downloadAnalysisPdf(r: AnalysisResult, meta: { fileName?: string
     ensure(22);
     doc.setTextColor(INK); doc.setFont("helvetica", "normal"); doc.setFontSize(10);
     doc.text(k[0].toUpperCase() + k.slice(1), M, y + 12);
-    doc.setDrawColor(230); doc.setFillColor(240);
+    doc.setDrawColor("#E6E6E6"); doc.setFillColor("#F0F0F0");
     doc.roundedRect(M + 110, y + 4, barMax, 10, 5, 5, "F");
-    doc.setFillColor(122, 92, 255);
+    doc.setFillColor("#7A5CFF");
     doc.roundedRect(M + 110, y + 4, Math.max(2, (barMax * v) / 100), 10, 5, 5, "F");
     doc.setTextColor(MUTE); doc.text(`${v}/100`, W - M, y + 12, { align: "right" });
     y += 22;
@@ -114,7 +114,7 @@ export function downloadAnalysisPdf(r: AnalysisResult, meta: { fileName?: string
     text(title, 12, { bold: true });
     items.forEach((it) => {
       ensure(16);
-      doc.setFillColor(color); doc.circle(M + 4, y + 4, 2, "F");
+      doc.setFillColor(color as string); doc.circle(M + 4, y + 4, 2, "F");
       doc.setTextColor(INK); doc.setFont("helvetica", "normal"); doc.setFontSize(10);
       const lines = doc.splitTextToSize(it, W - M * 2 - 14);
       doc.text(lines, M + 14, y + 7);
@@ -129,7 +129,7 @@ export function downloadAnalysisPdf(r: AnalysisResult, meta: { fileName?: string
     r.missing_keywords.forEach((k) => {
       const w = doc.getTextWidth(k) + 18;
       if (x + w > W - M) { y += lh; x = M; ensure(lh); }
-      doc.setDrawColor(122, 92, 255); doc.setFillColor(245, 242, 255);
+      doc.setDrawColor("#7A5CFF"); doc.setFillColor("#F5F2FF");
       doc.roundedRect(x, y, w, 16, 8, 8, "FD");
       doc.setTextColor(ACCENT); doc.setFont("helvetica", "normal"); doc.setFontSize(9);
       doc.text("+ " + k, x + 9, y + 11);
