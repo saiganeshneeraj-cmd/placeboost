@@ -320,152 +320,73 @@ function Dashboard() {
       <AuroraBackdrop />
       <Header />
 
-      <main className="mx-auto w-[min(1240px,95%)] pb-24 pt-10">
-        {/* HERO */}
-        <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
-          {/* LEFT: value prop + gauge */}
-          <div className="lg:col-span-7 space-y-6">
-            <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#38BDF8]" />
-                Real-time reactive scoring
-              </div>
-              <h1 className="font-display text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl">
-                Land the offer.<br />
-                <span className="neon-text">Not just the interview.</span>
-              </h1>
-              <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-white/70">
-                PlaceBoost pairs an AI resume sandbox with a gamified roadmap and predictive
-                placement analytics — engineered for students who ship real work.
-              </p>
-              <div className="mt-6 flex flex-wrap items-center gap-3">
-                <Link
-                  to="/sandbox"
-                  className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#1E3A8A] via-[#3B82F6] to-[#38BDF8] px-6 py-3 text-[15px] font-semibold text-white shadow-[0_16px_50px_-12px_rgba(59,130,246,0.7)] ring-1 ring-white/15 transition hover:-translate-y-0.5 hover:shadow-[0_22px_60px_-12px_rgba(56,189,248,0.9)]"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  Launch Analysis
-                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-                </Link>
-                <a
-                  href="#roadmap"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-[14px] font-medium text-white/80 backdrop-blur transition hover:border-white/20 hover:text-white"
-                >
-                  See the roadmap
-                </a>
-              </div>
-            </div>
-
-
-            <div className="glass-strong p-6">
-              <div className="flex flex-col items-center gap-8 md:flex-row">
-                <ScoreGauge value={score} />
-                <div className="flex-1 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="font-display text-lg font-semibold">Resume Sandbox</div>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-widest text-white/60">Live</span>
-                  </div>
-                  <MetricBar label="Keywords" value={keywords} hint="JD-aligned tech terms" />
-                  <MetricBar label="Formatting" value={format} hint="ATS-parseable structure" />
-                  <MetricBar label="Structure" value={structure} hint="Section hierarchy" />
-                  <MetricBar label="Experience" value={experience} hint="Impact quantification" />
-                  <MetricBar label="Skills" value={skills} hint="Stack depth & breadth" />
-                </div>
-              </div>
-
-              {/* Sandbox controls */}
-              <div className="mt-6 grid grid-cols-1 gap-3 border-t border-white/10 pt-5 md:grid-cols-2">
-                <div>
-                  <div className="mb-2 text-xs uppercase tracking-widest text-white/55">Tune inputs — score reacts</div>
-                  <div className="space-y-2">
-                    {[
-                      { label: "Keywords", v: keywords, set: setKeywords },
-                      { label: "Experience", v: experience, set: setExperience },
-                      { label: "Skills", v: skills, set: setSkills },
-                    ].map((r) => (
-                      <label key={r.label} className="flex items-center gap-3 text-sm text-white/70">
-                        <span className="w-24 text-white/55">{r.label}</span>
-                        <input
-                          type="range" min={0} max={100} value={r.v}
-                          onChange={(e) => r.set(Number(e.target.value))}
-                          className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-white/10 accent-[#38BDF8]"
-                        />
-                        <span className="w-8 text-right font-display text-xs">{r.v}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-widest text-white/55">
-                    <CircleAlert className="h-3.5 w-3.5 text-[#F5B942]" /> Buzzword sweeper
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {buzz.map((b) => (
-                      <span key={b} className="rounded-full border border-[#F5B942]/40 bg-[#F5B942]/10 px-3 py-1 text-xs text-[#F5B942] line-through">{b}</span>
-                    ))}
-                  </div>
-                  <div className="mt-3 mb-1 text-[11px] uppercase tracking-widest text-white/45">Suggested replacements</div>
-                  <div className="flex flex-wrap gap-2">
-                    {boost.map((b) => (
-                      <span key={b} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/85">
-                        <span className="mr-1 text-[#3B82F6]">↑</span>{b}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+      <main className="mx-auto w-[min(1180px,92%)] pb-32">
+        {/* HERO — centered, minimal */}
+        <section className="flex min-h-[78vh] flex-col items-center justify-center text-center">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-3.5 py-1.5 text-[11px] uppercase tracking-[0.18em] text-white/70 backdrop-blur">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#7DD3FC]" />
+            AI Placement Copilot
           </div>
 
-          {/* RIGHT: roadmap + telemetry */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="glass-strong p-6">
-              <div className="mb-3 flex items-center justify-between">
-                <div>
-                  <div className="text-xs uppercase tracking-widest text-white/55">Gamified path</div>
-                  <div className="font-display text-lg font-semibold">Skill-tree Roadmap</div>
-                </div>
-                <MapIcon className="h-5 w-5 text-[#3B82F6]" />
-              </div>
-              <Roadmap phases={phases} active={activePhase} onHover={setActivePhase} />
-            </div>
+          <h1 className="font-display text-[52px] font-semibold leading-[1.02] tracking-[-0.035em] text-white md:text-[80px]">
+            Land the offer.
+            <br />
+            <span className="neon-text">Not just the interview.</span>
+          </h1>
 
-            <div className="grid grid-cols-2 gap-4">
-              <ArcGauge value={Math.min(96, Math.round(score * 0.95))} label="Placement Prob." sub="Top-3 drives" />
-              <PackageDial score={score} />
-            </div>
+          <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-white/65 md:text-[16px]">
+            Real-time ATS scoring, an AI resume booster, and a gamified skill roadmap —
+            engineered for students who ship real work.
+          </p>
 
-            <div className="glass p-4">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-white/55">
-                <Target className="h-3.5 w-3.5 text-[#38BDF8]" /> Drive target
-              </div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {["Google", "Atlassian", "Razorpay", "Zoho", "Deloitte"].map((c) => (
-                  <button key={c} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80 transition hover:border-[#38BDF8]/50 hover:text-white">{c}</button>
-                ))}
-              </div>
-            </div>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              to="/sandbox"
+              className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#1E3A8A] via-[#3B82F6] to-[#38BDF8] px-7 py-3.5 text-[15px] font-semibold text-white shadow-[0_20px_60px_-15px_rgba(59,130,246,0.75)] ring-1 ring-white/20 transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-15px_rgba(56,189,248,0.95)]"
+            >
+              <Sparkles className="h-4 w-4" />
+              Launch Analysis
+              <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+            </Link>
+            <a
+              href="#features"
+              className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.03] px-6 py-3.5 text-[14px] font-medium text-white/75 backdrop-blur transition hover:border-white/25 hover:text-white"
+            >
+              Explore features
+            </a>
+          </div>
+
+          <div className="mt-14 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[11px] uppercase tracking-[0.2em] text-white/40">
+            <span>ATS-accurate scoring</span>
+            <span className="h-1 w-1 rounded-full bg-white/25" />
+            <span>AI resume booster</span>
+            <span className="h-1 w-1 rounded-full bg-white/25" />
+            <span>PDF report export</span>
           </div>
         </section>
 
-        {/* FOOTER FEATURE TUNNELS */}
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {/* FEATURE STRIP — quiet, three cards */}
+        <section id="features" className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
           {[
-            { icon: Github, title: "GitHub Repo Scraper", body: "Auto-generate technical bullet points from your best repos.", cta: "Connect GitHub" },
-            { icon: Cpu, title: "Project → Experience", body: "Turn academic projects into impact-driven résumé lines.", cta: "Synthesize" },
-            { icon: Wand2, title: "Resume Builder", body: "Guided wizard with live ATS review at every step.", cta: "Start building" },
-          ].map(({ icon: Icon, title, body, cta }) => (
-            <div key={title} className="glass group p-5 float-slow transition hover:-translate-y-1">
-              <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#1E3A8A]/30 to-[#38BDF8]/30 border border-white/10">
-                <Icon className="h-5 w-5 text-[#BAE6FD]" />
+            { icon: FileText, title: "Resume Sandbox", body: "Drop a PDF or paste text. Instant ATS score with metric breakdown.", to: "/sandbox" },
+            { icon: Wand2, title: "AI Boost", body: "Rewrite with quantified impact, verified score lift, one-click download." },
+            { icon: LineChart, title: "Placement Signal", body: "Predicted probability and expected package range from your profile." },
+          ].map(({ icon: Icon, title, body, to }) => {
+            const Card = (
+              <div className="glass group h-full p-5 transition hover:-translate-y-0.5 hover:border-white/20">
+                <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04]">
+                  <Icon className="h-4 w-4 text-[#BAE6FD]" />
+                </div>
+                <div className="font-display text-[15px] font-semibold tracking-tight">{title}</div>
+                <p className="mt-1 text-[13px] leading-relaxed text-white/60">{body}</p>
               </div>
-              <div className="font-display text-base font-semibold">{title}</div>
-              <p className="mt-1 text-sm text-white/65">{body}</p>
-              <button className="mt-4 inline-flex items-center gap-1 text-sm text-white/85 transition group-hover:text-[#38BDF8]">
-                {cta} <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
+            );
+            return to ? (
+              <Link key={title} to={to} className="block">{Card}</Link>
+            ) : (
+              <div key={title}>{Card}</div>
+            );
+          })}
         </section>
       </main>
     </div>
