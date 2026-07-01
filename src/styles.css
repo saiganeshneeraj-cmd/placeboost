@@ -84,18 +84,16 @@
   }
 }
 
-/* Deep blue cosmic canvas */
+/* Deep blue cosmic canvas — vertical navy → luminous cobalt */
 @utility cosmic-bg {
   position: fixed;
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(1400px 900px at 12% 8%, rgba(30, 90, 220, 0.55), transparent 62%),
-    radial-gradient(1200px 900px at 88% 18%, rgba(60, 140, 255, 0.38), transparent 60%),
-    radial-gradient(1100px 1000px at 55% 100%, rgba(10, 40, 140, 0.60), transparent 65%),
-    linear-gradient(180deg, #060B1E 0%, #050818 45%, #03060F 100%);
-  background-size: 220% 220%, 220% 220%, 220% 220%, 100% 100%;
-  animation: aurora-drift 26s ease-in-out infinite alternate;
+    radial-gradient(120% 70% at 50% 118%, rgba(147, 197, 253, 0.55) 0%, rgba(59, 130, 246, 0.45) 22%, rgba(29, 78, 216, 0.30) 40%, rgba(15, 23, 62, 0) 62%),
+    radial-gradient(90% 50% at 50% 100%, rgba(186, 230, 253, 0.35) 0%, transparent 55%),
+    linear-gradient(180deg, #02040C 0%, #04081C 30%, #061436 55%, #0A2A7A 78%, #1E5FD8 95%, #4FA8FF 100%);
+  background-attachment: fixed;
 }
 
 @utility cosmic-noise {
