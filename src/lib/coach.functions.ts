@@ -1,30 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
+import { aiChatJSON } from "./ai-provider";
 
 /* ---------------- Shared AI call ---------------- */
 
 async function callAI(system: string, user: string): Promise<any> {
-  const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("AI gateway not configured");
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
-    body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      response_format: { type: "json_object" },
-    }),
-  });
-  if (res.status === 429) throw new Error("Rate limit hit — try again in a moment.");
-  if (res.status === 402) throw new Error("AI credits exhausted. Add credits in workspace settings.");
-  if (!res.ok) {
-    const t = await res.text().catch(() => "");
-    throw new Error(`AI gateway error ${res.status}: ${t.slice(0, 200)}`);
-  }
-  const json = await res.json();
-  const content: string = json?.choices?.[0]?.message?.content ?? "";
+  const content = await aiChatJSON([
+    { role: "system", content: system },
+    { role: "user", content: user },
+  ]);
   return extractJson(content);
 }
 
