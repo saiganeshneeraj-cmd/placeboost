@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SandboxRouteImport } from './routes/sandbox'
 import { Route as PredictRouteImport } from './routes/predict'
 import { Route as InterviewRouteImport } from './routes/interview'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 
 const SandboxRoute = SandboxRouteImport.update({
@@ -29,6 +30,11 @@ const InterviewRoute = InterviewRouteImport.update({
   path: '/interview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -37,12 +43,14 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/interview': typeof InterviewRoute
   '/predict': typeof PredictRoute
   '/sandbox': typeof SandboxRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/interview': typeof InterviewRoute
   '/predict': typeof PredictRoute
   '/sandbox': typeof SandboxRoute
@@ -50,20 +58,22 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/interview': typeof InterviewRoute
   '/predict': typeof PredictRoute
   '/sandbox': typeof SandboxRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/interview' | '/predict' | '/sandbox'
+  fullPaths: '/' | '/auth' | '/interview' | '/predict' | '/sandbox'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/interview' | '/predict' | '/sandbox'
-  id: '__root__' | '/' | '/interview' | '/predict' | '/sandbox'
+  to: '/' | '/auth' | '/interview' | '/predict' | '/sandbox'
+  id: '__root__' | '/' | '/auth' | '/interview' | '/predict' | '/sandbox'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   InterviewRoute: typeof InterviewRoute
   PredictRoute: typeof PredictRoute
   SandboxRoute: typeof SandboxRoute
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InterviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -104,6 +121,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   InterviewRoute: InterviewRoute,
   PredictRoute: PredictRoute,
   SandboxRoute: SandboxRoute,
