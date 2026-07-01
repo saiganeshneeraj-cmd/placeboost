@@ -337,9 +337,9 @@ function Dashboard() {
         {/* FEATURE STRIP — quiet, three cards */}
         <section id="features" className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
           {[
-            { icon: FileText, title: "Resume Sandbox", body: "Drop a PDF or paste text. Instant ATS score with metric breakdown.", to: "/sandbox" },
-            { icon: Wand2, title: "AI Boost", body: "Rewrite with quantified impact, verified score lift, one-click download." },
-            { icon: LineChart, title: "Placement Signal", body: "Predicted probability and expected package range from your profile." },
+            { icon: FileText, title: "Resume Sandbox", body: "Drop a PDF or paste text. Instant ATS score, boost, and cover letter.", to: "/sandbox" },
+            { icon: Cpu, title: "Interview Prep", body: "AI-generated tech + behavioral questions with STAR answers.", to: "/interview" },
+            { icon: LineChart, title: "Placement Predictor", body: "Company-tier odds and expected CTC range for the Indian market.", to: "/predict" },
           ].map(({ icon: Icon, title, body, to }) => {
             const Card = (
               <div className="glass group h-full p-5 transition hover:-translate-y-0.5 hover:border-white/20">
