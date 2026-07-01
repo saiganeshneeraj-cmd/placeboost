@@ -400,7 +400,7 @@ function Sandbox() {
                           {v.jobTarget && <span className="truncate">· {v.jobTarget.slice(0, 30)}</span>}
                         </div>
                       </button>
-                      <button onClick={() => removeVersion(v.id)} className="rounded-md p-1.5 text-white/40 opacity-0 transition hover:bg-white/5 hover:text-red-300 group-hover:opacity-100">
+                      <button onClick={() => removeVersion(v)} className="rounded-md p-1.5 text-white/40 opacity-0 transition hover:bg-white/5 hover:text-red-300 group-hover:opacity-100">
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
